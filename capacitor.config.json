@@ -1,0 +1,9 @@
+{
+  "appId": "com.air.Mappyjump",
+  "appName": "Mappy",
+  "webDir": "www",
+  "backgroundColor": "#f6f1f6",
+  "android": {
+    "backgroundColor": "#f6f1f6"
+  }
+}
