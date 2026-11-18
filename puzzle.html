@@ -1099,7 +1099,8 @@ var TUT_LEVEL = {
 
 var START_LIVES = 3;
 var HINT_MARKS = 5;      /* bir ampul en çok kaç kareyi işaretler */
-var AD_HELP_REWARD = 2;  /* reklamla gelen yardım hakkı */
+/* reklam izleyince yardım hakları başlangıç sayısına dolar: ampul 5, büyüteç 3 */
+var HELP_START = { hints: 5, glasses: 3 };
 
 /* Fare animasyonları (8x2 sprite) */
 var SPRITES = {
@@ -2372,7 +2373,7 @@ function showAdOffer(kind) {
   var title = kind === 'hints' ? t('hintsOut') : t('glassOut');
   openOverlay(
     '<h2 id="ovTitle">' + title + '</h2>' +
-    '<div class="acts">' + adButton(kind === 'hints' ? 'adHints' : 'adGlasses', t('adPlus', AD_HELP_REWARD),
+    '<div class="acts">' + adButton(kind === 'hints' ? 'adHints' : 'adGlasses', t('adPlus', HELP_START[kind]),
                                     kind === 'hints' ? 'ampul' : 'buyutec') +
     '<button class="txt-btn" type="button" data-act="close">' + t('cancel') + '</button></div>', true);
 }
@@ -2456,14 +2457,14 @@ var ACTIONS = {
   },
   adHints: function () {
     Ads.rewarded('ampul', function () {
-      P.bulb += AD_HELP_REWARD;
+      P.bulb = Math.max(P.bulb, HELP_START.hints);
       save();
       closeOverlay();
     });
   },
   adGlasses: function () {
     Ads.rewarded('buyutec', function () {
-      P.glass += AD_HELP_REWARD;
+      P.glass = Math.max(P.glass, HELP_START.glasses);
       save();
       closeOverlay();
     });

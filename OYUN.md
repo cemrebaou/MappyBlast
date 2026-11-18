@@ -70,7 +70,7 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - `Ads.rewarded(placement, onReward)`: yerler `can`, `ampul`, `buyutec`. Teklif tuşu ekrana gelince `rewardedOffered`, ödül verilince `rewardedWatched` artar. Reklam gelmezse "Reklam şu an yok" kartı.
 - `Ads.interstitialAfterLevel(level, then)`: "Sonraki bölüm"e basınca. Öğreticide, `noAds` oyuncuda ve bölüm 4'ten önce yok. O bölümde can bittiyse sonraki 1 (iki kez bittiyse 2) geçiş reklamsız (`adCalm`). Son reklamdan beri en az 3 dk ve en az N bölüm: C 3, B 4, A 5. Sayaç `interstitialShown`.
 - Profil (`profile`): D = `noAds`; 5 tekliften önce B; izleme oranı ≥%60 A, %20–60 B, <%20 C.
-- A oyuncusu: bir yardım hakkı 0'a inince bir kez "+2 hak" kartı kendiliğinden açılır (`adProactiveDone`).
+- A oyuncusu: bir yardım hakkı 0'a inince bir kez "reklam izle, haklar dolsun" kartı kendiliğinden açılır (`adProactiveDone`).
 
 ## Dosyalar
 - `kare-N` / `pati-N`: pastel bölge kareleri, 9 renk (0 kırmızı, 1 sarı, 2 mavi, 3 mor, 4 pembe, 5 turkuaz, 6 turuncu, 7 yeşil, 8 kahve). `fare-cikis` / `fare-idle`: fare sprite şeritleri (12 kare, 170 ms).
@@ -187,4 +187,5 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - Yedek: kapanma olayı gelmezse sayfa yeniden görünür olunca 1.5 sn sonra oyun devam eder.
 - Banner: `showBanner({adId, adSize:'ADAPTIVE_BANNER', position, margin:0})` ilk kez, sonra `hideBanner()` / `resumeBanner()`; yüklenemezse (`bannerAdFailedToLoad`) bir sonraki istekte ya da bekleme sonrası yeniden. Puzzle `BOTTOM_CENTER` alt bant (`#adBand`, bölüm > 5), Jump `TOP_CENTER` üst bant (`#adTop`, 2. oyundan itibaren). `bannerAdSizeChanged` yüksekliği (dp = CSS px) `--adh` olarak yazılır: puzzle bandı = `--adh` (+ alt güvenli alan; `fitLayout` bu sabit px'i ölçekli bloktan ayrı hesaplar), jump bandı ve HUD (`--band`) = `--adh` + üst güvenli alan. Banner yokken bant 0.
 - Müzik tam ekran reklam boyunca susar (`Music.hold`), sonra devam eder. Tüm çağrılar try/catch + `.catch`; reklam hatası oyunu bozmaz.
-- Sıklık kuralları aynı (puzzle geçiş kuralları, profil, ödüllü +2 hak / can; jump ilk 2 oyunda geçiş yok, ≥3 oyun bitişi + 3 dk, oyun başına 1 ödüllü devam).
+- Sıklık kuralları aynı (puzzle geçiş kuralları, profil, ödüllü reklam: ampul 5e, büyüteç 3e dolar / can dolar; jump ilk 2 oyunda geçiş yok, ≥3 oyun bitişi + 3 dk, oyun başına 1 ödüllü devam).
+- Ampul/büyüteç bitince: hak rozetinde + çıkar, dokununca reklam kartı; izleyince ampul 5'e, büyüteç 3'e dolar (HELP_START).
