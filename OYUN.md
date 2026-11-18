@@ -10,14 +10,16 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - Ampul (5 hak): fare olamayacak en fazla 5 kareyi patiler. Büyüteç (3 hak): bir fareyi açar. Hak bitince reklam +2.
 
 ## Ekran yerleşimi (yukarıdan aşağı, 360×740'ta kaydırmasız)
-- Üst çubuk: sol üstte `ui-ayar` + sağında `ui-pause`, ayarların altında `ik-yeniden` (40 px). Ortada bölüm plakası + yıldızlar, sağ üstte para paneli.
+- Ölçek: tüm boyutlar `--u` biriminin katı (`calc(N*var(--u))`). `fitLayout()` (yüklenince, resize, orientationchange, tam ekran, yazı tipi yüklenince, her tablo kuruluşunda): u = max(min(genişlik/390, yükseklik/844), min(1, genişlik/360)) px; CSS'te `min(100vw/390, 100dvh/844)` yedeği. 360–390 px telefonda u = 1, 1072×1918'de ≈ 2.27; yatayda yükseklik belirler. Sahne genişliği sınırsız; kartlar (`--cw` = min(88vw, 360u)) da u ile büyür.
+- `--bw`: tablo çerçevesinin genişliği (en az üst çubuğun sığdığı 336u). Üst çubuk, gösterge sırası, kural şeridi, benzetici banner bu genişlikte ve çerçeveyle hizalı; tam ekran tuşu çerçevenin sağ kenarına hizalı.
+- Üst çubuk: sol üstte `ui-ayar` + sağında `ui-pause`, ayarların altında `ik-yeniden` (44u). Ortada bölüm plakası + yıldızlar, sağ üstte para paneli.
 - Gösterge sırası: can paneli, süre, bulunan/N sayacı. Öğreticide gizli; öğretici yazı kutusu (ve bölüm 1 kural balonu) bu sıranın yerinde durur.
 - Kural şeridi: beyaz yuvarlak şerit, 3 küçük kart (12 px kare/pati/fare ile 3×3 mini resim + yazı): "Her renkte 1 fare", "Her satır ve sütunda 1 fare", "Fareler birbirine değmez". Öğreticide de görünür.
 - Bölge sekmesi: çerçevenin üst kenarına yapışık, çerçeve renginde sekme (`#regTab`, `role="img"`, "Bulunan fareler: x / N"). Her bölge için sırayla mini kare (düz `kare-N` + `fare-cikis` 0. kare = boş delik), boyu tablo karesinin yarısı. O bölgenin faresi bulununca aynı sprite oynatıcıyla (`startPet`) çıkış → idle. Her bölüm başında / baştan başlatınca yeniden kurulur.
-- Tablo: kalan yüksekliğe sığar (`.play` boy kabı; genişlik = (yükseklik − 92 px) / (1.018 + 0.454/N)).
-- Yardım çubuğu: ampul + büyüteç (72 px, arası 20 px), tablonun 14 px altında; grup dikeyde ortalanır.
-- En altta 60 px reklam bandı (`#adBand`). Tam ekran tuşu (44 px) sağ altta bandın hemen üstünde.
-- Banner: `Ads.banner()` bölüm başında; yalnızca bölüm > 5, `noAds` değil, öğretici değil. `Ads.provider.showBanner()` / `hideBanner()`; benzetici bantta 50 px açık gri "Reklam" şeridi çizer. Bölüm 6'dan önce bant boş durur.
+- Tablo: olabildiğince büyük, kalan yüksekliğe sığar (`.play` boy kabı; genişlik = min(sahne içi, (yükseklik − 92u) / (1.018 + 0.454/N))). Üst blok yukarıda, tablo + yardım çubuğu kalan alanda dikey ortalı.
+- Yardım çubuğu: ampul + büyüteç (72u, arası ~2 tuş = 144u; dar çerçevede tam ekran tuşuna yer kalsın diye `--bw − 248u`'ya, en az 20u'ya iner), tablonun 14u altında, ortalı.
+- En altta 60u reklam bandı (`#adBand`). Tam ekran tuşu (44u) sağ altta bandın hemen üstünde, çerçevenin sağ kenarına hizalı.
+- Banner: `Ads.banner()` bölüm başında; yalnızca bölüm > 5, `noAds` değil, öğretici değil. `Ads.provider.showBanner()` / `hideBanner()`; benzetici bantta 50u yüksek, çerçeve genişliğinde ortalı açık gri "Reklam" şeridi çizer. Bölüm 6'dan önce bant boş durur.
 
 ## Bölüm sistemi
 - Bölümler oyun içinde üretiliyor (tohumlu RNG), hep tek çözümlü ve tahminsiz çözülebilir.
