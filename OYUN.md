@@ -191,4 +191,4 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - Ampul/büyüteç bitince: hak rozetinde + çıkar, dokununca reklam kartı; izleyince ampul 5'e, büyüteç 3'e dolar (HELP_START).
 - Kaybedince tekrar oynama: Puzzle 'Baştan başla' ve Jump 'Tekrar oyna' her seferinde geçiş reklamı gösterir (yüklüyse; reklamsız oyuncuya yok).
 - Bölümü geç: büyütecin sağındaki yeşil ok (ik-oynat). Dokununca 'Reklam izle, geç' kartı; ödüllü reklam izlenince bölüm geçilir (yıldız/para yok), ZP 8 düşer (SKIP_ZP_DROP) → sonraki bölüm daha kolay. Sayaç: counters.levelsSkipped.
-  Geç butonunun sağ altında küçük reklam ikonu (ad-mark).
+  Geç butonunun sağ üstünde, sayı rozetlerinin yerinde küçük reklam ikonu (ad-mark).
