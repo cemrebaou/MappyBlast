@@ -223,6 +223,8 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .img-btn > img{display:block;width:calc(72*var(--u));height:calc(72*var(--u))}
 .img-btn:active:not(:disabled){transform:translateY(calc(2*var(--u))) scale(.97)}
 .img-btn:disabled{opacity:.55;filter:grayscale(.35)}
+.img-btn > .ad-mark{position:absolute;right:calc(-6*var(--u));bottom:calc(-4*var(--u));width:calc(32*var(--u));height:calc(32*var(--u));pointer-events:none;
+  filter:drop-shadow(0 calc(1*var(--u)) calc(2*var(--u)) rgba(30,20,60,.3))}
 .img-btn > .badge{
   position:absolute;top:calc(-4*var(--u));right:calc(-4*var(--u));left:auto;bottom:auto;
   width:calc(28*var(--u));height:calc(28*var(--u));min-width:0;max-width:none;padding:0;margin:0;
@@ -463,6 +465,7 @@ html.native .sim-banner{display:none!important}
     </button>
     <button class="img-btn" type="button" id="btnSkip" aria-label="Bölümü geç">
       <img src="ik-oynat.webp" width="129" height="128" alt="">
+      <img class="ad-mark" src="ik-reklam.webp" width="162" height="160" alt="">
     </button>
   </div>
   </section>
