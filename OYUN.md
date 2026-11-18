@@ -5,13 +5,25 @@
 - `puzzle.html` = Mappy Puzzle (eski `index.html`; varlıkları kök klasörde, yollar aynı). "Ana sayfa" (`ik-ev`) → `index.html`. Kayıt `fareBulmaca.v1`.
 - `jump/index.html` = Mappy Jump (kendi varlıkları `jump/` içinde; ortak arayüz resimlerini `../` ile kullanır). Kayıt `mappyJump.v1`. Puzzle ile ortak JS dosyası yok, kod ayrı.
 - Launcher ayarı: `mappyMenu.v1` (`music`).
+- Dil ayarı: `mappyLang` (üç sayfanın ortak localStorage anahtarı). Bkz. "Dil sistemi".
+
+## Dil sistemi (2026-11-18)
+- 11 dil, bu sırayla (dil tuşu da bu sırayla döner): `tr` Türkçe, `en` English, `zh` 中文 (sadeleştirilmiş), `hi` हिन्दी, `es` Español, `fr` Français, `ar` العربية, `bn` বাংলা, `pt` Português, `ru` Русский, `ur` اردو.
+- Varsayılan: kayıt yoksa tarayıcı dili (`navigator.languages`, ilk eşleşen) listede ise o, değilse İngilizce. Seçim yalnızca launcher'daki dil tuşuyla kaydedilir.
+- Her sayfanın `<script>` başında aynı üretilmiş blok var: `/* @@I18N-BEGIN */ … /* @@I18N-END */`. İçinde `LANGS`, o sayfanın kullandığı anahtarlarla `I18N` sözlüğü (anahtar → 11 dillik dizi, sıra yukarıdaki gibi) ve ortak kod: `readLang()`, `setLang()`, `saveLang()`, `t(key, a, b…)` (`{0}`, `{1}` yer tutucuları; eksik çeviri → İngilizce), `textDir(el)`, `fitText(el)` / `fitAll(root, sel)`, `LANG_NAMES`, `LANG_CODES`.
+- Çeviri eklemek / düzeltmek: üç sayfadaki ilgili satır (aynı anahtar birden çok sayfada olabilir: `settings`, `pause`, `ad`, `home`, `music`, `on/off` …) elle düzeltilir. HTML'deki Türkçe yazılar yalnızca yedek; açılışta `applyTexts()` seçili dille değiştirir.
+- Arapça ve Urduca: yalnızca yazı kaplarına `dir="rtl"` (kartlar, öğretici kutusu, kural şeridi, jump başlama yazısı, launcher bildirimi); oyun yerleşimi değişmez.
+- Yazı tipi: Baloo 2 (Latin + Devanagari). Dil seçilince eksik yazı ailesi Google Fonts'tan yüklenir (`LANG_FONTS`): zh → Noto Sans SC, ar/ur → Baloo Bhaijaan 2, bn → Baloo Da 2, ru → Nunito. `--font` yığınında ayrıca sistem yedekleri (Noto Sans, Noto Sans Devanagari/Bengali, Noto Naskh Arabic, PingFang SC, Microsoft YaHei, system-ui) var; kutu görünmez. ar/ur/hi/bn/zh'de harf aralığı 0.
+- Uzun çeviriler: kart başlığı, satır tuşu yazıları ve tuş yazıları sığmazsa `fitText` yazıyı en çok %40 küçültür (kart açılınca, yeniden boyutlanınca, yazı tipi gelince). Puzzle plakasındaki kelime (`BÖLÜM` / çevirisi) rakamlarla birlikte sığacak kadar küçülür (`fitPlaque`, en az 5cqw).
+- Geri/ileri ile önbellekten açılan sayfa başka dilde kaldıysa yenilenir (`pageshow`).
 
 ## Açılış (`index.html`)
 - `menu.webp` (941×1672, dik): üst yarı "Mappy Puzzle" afişi, alt yarı "Mappy Jump". Ayırıcı mavi/altın çubuk y ≈ 845–890, bölme çizgisi y = 867.
-- Yükleme: yumuşak zemin, menü resminin soluk gri kopyası; renkli resim soldan sağa açılır, en altta ince ilerleme çizgisi (5u). İlerleme = gerçek yükleme: önce `menu.webp`, sonra iki oyunun ana dosyaları (puzzle kare/pati/ui/ik/rakam resimleri, fare sprite'ları, `muzik.mp3`, `pop-1`, `ses-fare`; jump `fare.webp`, `ip.webp`, `baslangic.mp3`, `ziplama-1..3.mp3`). Resimler `new Image()`, mp3'ler `fetch` ile; hata / 8 sn zaman aşımı da "bitti" sayılır. En az 1.2 sn sürer.
+- Yükleme: yumuşak zemin, menü resminin soluk gri kopyası; renkli resim soldan sağa açılır, en altta ince ilerleme çizgisi (5u). İlerleme = gerçek yükleme: önce `menu.webp`, sonra iki oyunun ana dosyaları (puzzle kare/pati/ui/ik/rakam resimleri, fare sprite'ları, `muzik.mp3`, `pop-1`, `ses-fare`; jump `fare.webp`, `ip.webp`, `baslangic.mp3`, `muzik-jump.mp3`, `ziplama-1..3.mp3`). Resimler `new Image()`, mp3'ler `fetch` ile; hata / 8 sn zaman aşımı da "bitti" sayılır. En az 1.2 sn sürer.
 - Menü: resim ekranı doldurur. Dik ekranda (en/boy ≤ 0.75) cover, ama yanlardan en çok 22 px (kaynak) kesilir ki logolar kesilmesin; kalan üst/alt şerit aynı resmin bulanık açık kopyasıyla dolar. Geniş ekranda contain + aynı bulanık zemin. Hiç germe yok.
 - Ayırıcının üstü tam genişlik `<a href="puzzle.html" aria-label="Mappy Puzzle'ı oyna">`, altı `<a href="jump/index.html" aria-label="Mappy Jump'ı oyna">`; her biri resmin kendi yarısını gösterir. Basınca o yarı %97.5'e küçülür + hafif parlar, 140 ms sonra sayfa açılır.
 - Sol altta müzik tuşu (`ik-muzik` / `ik-muzik-kapali`, `aria-pressed`), `muzik.mp3` ilk dokunuştan sonra, ayara göre. Sağ altta tam ekran (`ui-fullscreen`, dikey kilit).
+- Dil tuşu (`#lang`): `ik-bolum-kare.webp` (krem kare, altın kenar), ayırıcı çubuktaki yıldız rozetinin tam üstünde: resimde merkez (471, 865), genişlik 130 px (rozet kalkanı ~412–532 × 807–925); konum menünün aynı cover/contain ölçeğiyle hesaplanır, her ekranda rozette kalır. İçinde kalın koyu yazıyla dil kodu (TR, EN, 中文, HI, ES, FR, AR, BN, PT, RU, UR; yazı = tuş genişliği × 0.3). Her dokunuş sıradaki dile geçer, `mappyLang`'a yazar, aria-label'ları günceller ve üstte 1.4 sn küçük beyaz yuvarlak kartta dilin kendi adını gösterir (Türkçe, English, 中文, हिन्दी, Español, Français, العربية, বাংলা, Português, Русский, اردو). Tuş z-index 4, `pointerdown`/`click` yayılımını durdurur; alttaki oyun bağlantılarını tetiklemez.
 
 ## Mappy Puzzle
 
@@ -65,7 +77,7 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - `ui-*`, `rakam-*`, `kalp-dolu` / `kalp-bos` (pastel): arayüz görselleri.
 - `ik-*` yuvarlak pastel tuşlar: `ik-ampul` (ipucu), `ik-buyutec` (fare göster), `ik-reklam` (reklam izle), `ik-muzik(-kapali)`, `ik-ses(-kapali)`, `ik-titresim(-kapali)`, `ik-ev`, `ik-yeniden`, `ik-oynat`, `ik-kapat`, `ik-kupa`.
 - Yardım tuşlarındaki sayı rozeti: 28×28 `ui-rozet` dairesi (sağ üst), içinde 18 px rakam; hak bitince 28×28 `ui-arti`.
-- Henüz kullanılmayan (bölüm haritası / günlük hediye için): `ik-kilit`, `ik-tik`, `ik-bolum-kare`, `ik-hediye`.
+- Henüz kullanılmayan (bölüm haritası / günlük hediye için): `ik-kilit`, `ik-tik`, `ik-hediye`. `ik-bolum-kare` launcher'da dil tuşu.
 - Sesler: `muzik.mp3` (arka plan döngüsü), `pop-1..8.mp3` (pati sesleri, sırayla döner), `ses-fare.mp3` (fare açılma).
 - Tema: pastel (2026-11-18). Çerçeve: farenin halkası renginde açık lila-gri kenar, iç zemin (`.well`) farenin deliğinde arkasındaki açık tondan (~#3f3640) biraz aydınlık: yumuşak radyal #4a4152 (orta) → #3b3341 (kenar), üstte hafif iç gölge.
 
@@ -86,8 +98,9 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - Kare seçimi: girişte ve ipte beklerken 0; ipe değince 0–2 (çömelme, 130 ms); yükselirken 3–6 (hıza göre); düşerken 7–11. Sola giderken yatay çevrilir.
 
 ### İp (`ip.webp`, 6×2, kare 360×130, 110 ms)
-- Çizim yüksekliği 0.72 birim (kalınlık hep aynı); 3 parçalı çizim: 24 px'lik altın uçlar sabit, orta kısım ipin genişliğine uzar/kısalır. İpin üst yüzeyi karede y = 12 px.
-- Çökme (ortada, px): 0, 16, 45, 73, 85, 64, 45, 30, 16, 7, 1, 0. Fare ipe inince animasyon bir kez oynar, fare çökmeyle aşağı iner (kenara yakın indiyse daha az: 1 − (2dx/w)², en az 0.25), 0.66 sn sonra (6. kare, ip geri yaylanırken) fırlar. Boşta ip düz (kare 0).
+- Boy (2026-11-18): tüm ip resmi uçlar dahil aynı oranla ölçeklenir. Başlangıç eskinin %90'ı: uzunluk 1.8, kalınlık 0.648 birim (ilk ip 2.16 uzun). Yükseldikçe her 19 m'de %1 küçülür (`sizeAt(y) = max(0.5, 1 − 0.01 × floor(y / 19))`): 60 m %97, 150 m %93, 270 m %86, 420 m %78, 600 m %69, 760 m %60, 950 m'de taban %50 (uzunluk 0.9). Kalınlık en az 0.38 birim (≈ %59'da, ~780 m'den sonra sabit) — görünür ve basılabilir kalsın. Her ip kendi `w` / `h` değerini taşır.
+- 3 parçalı çizim: altın uçlar kalınlıkla orantılı (kaynak 24 px), orta kısım ipin uzunluğuna uzar/kısalır. İpin üst yüzeyi karede y = 12 px (kalınlıkla ölçeklenir). Çarpışma genişliği çizilen genişliği izler: |dx| ≤ 0.46 × w + 0.2.
+- Çökme (ortada, kaynak px, ipin kalınlığıyla ölçeklenir): 0, 16, 45, 73, 85, 64, 45, 30, 16, 7, 1, 0. Fare ipe inince animasyon bir kez oynar, fare çökmeyle aşağı iner (kenara yakın indiyse daha az: 1 − (2dx/w)², en az 0.25), 0.66 sn sonra (6. kare, ip geri yaylanırken) fırlar. Boşta ip düz (kare 0).
 - Tek yönlü çarpışma: yalnızca düşerken ve ayaklar ipin çizgisini yukarıdan geçerken yakalar; alttan geçerken çarpmaz.
 - Zıplama tepesi: ipin çizgisinin 3.15 birim üstü (yerçekimi 22 b/sn²; fırlama hızı buna göre hesaplanır). İlk aralık 2.2 → 0.95 birim pay.
 
@@ -100,31 +113,33 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
   - budget 5: turkuaz, yeşil, sarı, turuncu, kırmızı · 4: turkuaz, sarı, turuncu, kırmızı · 3: yeşil, sarı, kırmızı · 2: sarı, kırmızı.
 - Kırmızıyken iniş: ip ortadan kopar (iki yarı dönerek düşer ve solar, parçacık patlaması, `pop-1` sesi, titreşim 80 ms), fare içinden düşer.
 - Çürük ip (budget 1, yalnızca 600 m üstü, %50): ilk inişte zıplatır, kırmızı olur ve fare fırlarken kopar (tekrar konulamaz).
-- Renkler yüklemede sprite sayfasının 6 boyalı kopyası olarak hazırlanır: piksel piksel HSL, yalnızca mavi ip pikselleri (ton 165–262, doygunluk ≥ 0.22) yeni tona taşınır; altın uçlar kalır. Hedef tonlar: 176, 122, 52 (açık), 28, 0 (doygun). Piksel okunamazsa (file://) `hue-rotate` yedeği (uçlar da boyanır).
+- Renkler (2026-11-18 yeni palet): mavi (orijinal) → turkuaz/camgöbeği → taze yeşil → güneş sarısı → kehribar turuncu → kırmızı (eski kırmızı aynen). Yüklemede sprite sayfasının 6 boyalı kopyası hazırlanır: piksel piksel HSL, yalnızca mavi ip pikselleri (ton 165–262, doygunluk ≥ 0.22) boyanır; altın uçlar kalır, burgu gölgeleri ton/açıklık farkıyla korunur. `ROPE_TINT` = [ton, ton yayılımı, doygunluk ×, açıklık ×, açıklık +, açıklık tavanı]: turkuaz [186, .30, 1, 1, .05, .90], yeşil [118, .25, .92, 1, .05, .90], sarı [50, .12, 1, 1.15, .12, .93], turuncu [32, .12, 1, 1.05, .07, .90] (kırmızıya kaymasın diye dar yayılım), kırmızı [0, .40, 1.15, .95, 0, .90]. Parçacık renkleri `ROPE_CSS`: #2f8fe8, #25c6e0, #3cc54a, #ffd83a, #ff9a1f, #e8333a. Piksel okunamazsa (file://) `hue-rotate` yedeği (uçlar da boyanır).
 
 ### Zorluk (ipin yüksekliğine göre)
-| Bölge | Yükseklik | Hak | Aralık | İp genişliği | Yan kayma (merkezden) | Kayan ip | Kayma hızı |
-|---|---|---|---|---|---|---|---|
-| 1 sabah | 0–60 m | 5 | 2.20 | 2.00 | 0.6–1.4 | – | – |
-| 2 ikindi | 60–150 | 4 | 2.35 | 1.85 | 0.9–1.8 | %15 | 0.5 b/sn |
-| 3 gün batımı | 150–270 | 3 | 2.50 | 1.70 | 1.2–2.2 | %30 | 0.7 |
-| 4 alacakaranlık | 270–420 | 2 | 2.60 | 1.55 | 1.4–2.4 | %45 | 0.9 |
-| 5 gece | 420–600 | 2 | 2.70 | 1.40 | 1.6–2.6 | %60 | 1.1 |
-| 6 uzay | 600+ | 2 (%50'si 1 = çürük) | 2.75 | 1.30 | 1.7–2.7 | %70 | 1.3 |
-- Aralık, genişlik, yan kayma ve kayma hızı bir sonraki bölgeye doğru yumuşakça artar; hak bölge sınırında düşer.
+| Bölge | Yükseklik | Hak | Aralık | Yan kayma (merkezden) | Kayan ip | Kayma hızı |
+|---|---|---|---|---|---|---|
+| 1 sabah | 0–60 m | 5 | 2.20 | 0.6–1.4 | – | – |
+| 2 ikindi | 60–150 | 4 | 2.35 | 0.9–1.8 | %15 | 0.5 b/sn |
+| 3 gün batımı | 150–270 | 3 | 2.50 | 1.2–2.2 | %30 | 0.7 |
+| 4 alacakaranlık | 270–420 | 2 | 2.60 | 1.4–2.4 | %45 | 0.9 |
+| 5 gece | 420–600 | 2 | 2.70 | 1.7–2.8 | %60 | 1.1 |
+| 6 uzay | 600+ | 2 (%50'si 1 = çürük) | 2.75 | 1.9–3.1 → 950 m'de 2.2–3.5 | %70 | 1.3 |
+- İp boyu artık bölge tablosunda değil, `sizeAt(y)` eğrisinde (bkz. İp).
+- Aralık, yan kayma ve kayma hızı bir sonraki bölgeye doğru yumuşakça artar (son bölgede yan kayma 950 m'ye kadar artar); hak bölge sınırında düşer.
 - Kayan ipler: genlik 0.45–0.85 birim (ekrana sığdırılır), sinüs.
-- Adalet: en kötü durumda gereken yatay yol (yan kayma + iki ipin kayma genlikleri − ipin yarısı) ≤ 2.9 birim. Havada kalma ≥ 0.75 sn, 5.5 b/sn ile ~3.6 birim gidilir → her ip ulaşılabilir. Başsız deneme: kusursuz bot 900 sn oyunda (1708 m) hiç düşmedi.
+- Adalet (2026-11-18): havada gidilebilen yol `reachAt(aralık) = 0.85 × 5.5 × havada kalma`, havada kalma = √(2·3.15/22) + √(2·(3.15 − aralık)/22) (fırlayıştan bir sonraki ipin yüksekliğine düşene kadar; aralık 2.2 → 0.83 sn → 3.88 birim, 2.75 → 0.73 sn → 3.39 birim). En kötü yol = yan kayma + önceki ipin yarısı (uzak ucundan kalkış) + iki ipin kayma genliği; bu ≤ reach olacak şekilde önce yeni ipin genliği kısılır (kayan ipte en az 0.45 kalır), sonra yan kayma. İpte dururken yan hız birikebildiği için fırlayışta tam hız alınabilir.
+- Kusursuz yön botu (yerel /home/claude/tools/jump_bot.js, repoda değil; sahte DOM ile gerçek sayfa kodu): 40 deneme (390×844, 360×740, 1366×768, 1072×1918; 10'ar tohum), her biri 900 sn oyun = 1716 m, hiç düşmedi. 390×844'te ortalama / en büyük yan kayma: 0–150 m 1.34 / 1.93, 450 m 2.24 / 2.77, 750 m+ ~2.3–2.5 / 2.94 (eskiden en çok 2.7).
 
 ### Gökyüzü
 - Dikey renk geçişi + birkaç yumuşak tuval bulutu (kameranın 0.3 katı hızla parallaks, yavaş yatay kayma) + yıldızlar (gece / uzayda kıpırdar).
 - Bölgeler zorluk sınırlarında (60/150/270/420/600 m, ±15 m'de yumuşak geçiş): sabah mavisi → ikindi → gün batımı pembe/turuncu → alacakaranlık moru → yıldızlı gece → uzay laciverti. Bulutlar gece soluklaşır.
 
 ### Giriş
-- Önce "Başlamak için dokun" kaplaması (ses kilidi açılır). Sonra fare ilk ipte 0. karede durur, `baslangic.mp3` (~4.2 sn) çalar; bitince (ya da 4.5 sn sonra, ses kapalı / engelliyse hemen) zıplama başlar ve müzik girer.
+- Önce "Başlamak için dokun" kaplaması (ses kilidi açılır). Yazı tuş gibi değil: "EN İYİ" hapıyla aynı yarı saydam beyaz hap, mor yazı, ekranın ortasında gökyüzünde (alttan 50vh), hafif nabız; tüm ekran dokunulabilir. Sonra fare ilk ipte 0. karede durur, `baslangic.mp3` (~4.2 sn) çalar; bitince (ya da 4.5 sn sonra, ses kapalı / engelliyse hemen) zıplama başlar ve müzik girer.
 - "Tekrar oyna" / "Yeniden başla"da giriş sesi yok: 0.7 sn bekleyip başlar.
 
 ### Sesler
-- `ziplama-1/2/3.mp3` her fırlayışta sırayla (1, 2, 3, 1 …), Ses ayarına uyar. Müzik `../muzik.mp3` döngü (.35) yalnızca oyun akarken; kartlarda, reklamda ve sayfa gizliyken susar. Tuşlarda `../pop-1.mp3`.
+- `ziplama-1/2/3.mp3` her fırlayışta sırayla (1, 2, 3, 1 …), Ses ayarına uyar. Müzik `jump/muzik-jump.mp3` (13.75 sn, daha hızlı ve neşeli döngü; puzzle/launcher `muzik.mp3` kullanmaya devam eder) döngü (.35) yalnızca oyun akarken; kartlarda, reklamda ve sayfa gizliyken susar. Tuşlarda `../pop-1.mp3`.
 
 ### HUD
 - Üst orta: skor (`../rakam-*`, 46u) + "m"; altında "EN İYİ" hapı (20u rakam). Sol üst: Ayarlar (Müzik / Ses / Titreşim, kendi kaydı) ve Duraklat (Devam et / Yeniden başla / Ana sayfa → `../index.html`). Sağ üst: tam ekran (dikey kilit).
@@ -132,7 +147,7 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 
 ### Oyun bitti kartı
 - "Düştün!", yeni rekorsa "Yeni rekor!" + parıltı, SKOR ve EN İYİ (rakam resimleri).
-- `ik-reklam` "Reklam izle, devam et" (ödüllü, oyun başına 1 kez): ekranın alt kısmında (görünen bir sonraki ipin bir aralık altında) taze bir ip (en az 1.8 birim, hak en az 2), fare üstünde, 0.8 sn sonra zıplar; yakındaki eski ipler silinir.
+- `ik-reklam` "Reklam izle, devam et" (ödüllü, oyun başına 1 kez; kullanıldıysa gizlenmez: gri/soluk, basılamaz, altında "Bu oyunda kullanıldı" notu): ekranın alt kısmında (görünen bir sonraki ipin bir aralık altında) taze bir ip (en az 1.8 birim, hak en az 2), fare üstünde, 0.8 sn sonra zıplar; yakındaki eski ipler silinir.
 - "Ana sayfa" (mor) ve "Tekrar oyna" (altın).
 
 ### Reklam (`Ads`, jump'a ait)
@@ -144,4 +159,5 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - Kayıt `mappyJump.v1`: `music`, `sfx`, `vibe`, `best`, sayaçlar.
 
 ### Jump dosyaları
-- `jump/fare.webp`, `jump/ip.webp`, `jump/baslangic.mp3`, `jump/ziplama-1..3.mp3`. Kökten: `ui-pause`, `ui-ayar`, `ui-fullscreen`, `ui-kart`, `ui-btn-altin`, `ui-btn-mor`, `ui-parilti`, `ik-*`, `rakam-*`, `muzik.mp3`, `pop-1.mp3`.
+- `jump/fare.webp`, `jump/ip.webp`, `jump/baslangic.mp3`, `jump/ziplama-1..3.mp3`, `jump/muzik-jump.mp3`. Kökten: `ui-pause`, `ui-ayar`, `ui-fullscreen`, `ui-kart`, `ui-btn-altin`, `ui-btn-mor`, `ui-parilti`, `ik-*`, `rakam-*`, `pop-1.mp3`.
+- Tuvale yazı çizilmiyor; tüm jump yazıları HTML'de ve `t()` ile çevriliyor.

@@ -14,7 +14,8 @@
   --page:linear-gradient(180deg,#faf6f8 0%,#f1e9f0 100%);
   --ink:#3a2a5e;
   --ink-dim:#6f6089;
-  --font:"Baloo 2","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;
+  /* Baloo 2 = Latin + Devanagari; diğer yazılar için dil seçilince yüklenen aile + sistem yedekleri (kutu görünmesin) */
+  --font:"Baloo 2","Nunito","Baloo Bhaijaan 2","Baloo Da 2","Noto Sans SC","Arial Rounded MT Bold",system-ui,"Noto Sans","Noto Sans Devanagari","Noto Sans Bengali","Noto Naskh Arabic","Noto Nastaliq Urdu","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
   color-scheme:light;
   /* Tek ölçü birimi: 1u = min(genişlik/390, yükseklik/844) px (küçük telefonda en az 1 px).
      JS (fitLayout) kesin değeri yazar; bu satırlar yalnızca yedek. */
@@ -286,7 +287,10 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 }
 .row-btn:last-child{margin-bottom:0}
 .rb-in{display:flex;align-items:center;width:100%}
-.row-btn img{display:block;flex:0 0 calc(56*var(--u));width:calc(56*var(--u));height:calc(56*var(--u));border-radius:50%;margin-right:calc(12*var(--u));transition:transform .1s}
+.row-btn img{display:block;flex:0 0 calc(56*var(--u));width:calc(56*var(--u));height:calc(56*var(--u));border-radius:50%;margin-right:calc(12*var(--u));margin-inline-end:calc(12*var(--u));margin-inline-start:0;transition:transform .1s}
+.card[dir=rtl] .row-btn{text-align:right}
+/* harf aralığı bitişik / hece yazılarını bozar */
+html:lang(ar) *,html:lang(ur) *,html:lang(hi) *,html:lang(bn) *,html:lang(zh-Hans) *{letter-spacing:0 !important}
 .row-btn .cap{flex:1 1 auto;min-width:0;font-size:calc(20*var(--u));font-weight:800;line-height:1.1;color:var(--ink);white-space:nowrap}
 .row-btn .st{flex:0 0 auto;margin-left:calc(8*var(--u));font-size:calc(14*var(--u));font-weight:700;line-height:1;color:var(--ink-dim);white-space:nowrap}
 .row-btn:active img{transform:scale(.92)}
@@ -451,6 +455,133 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 </div>
 
 <script>
+/* @@I18N-BEGIN — çeviriler (sıra: tr en zh hi es fr ar bn pt ru ur); doğrudan burada düzenlenebilir (yerel üretici: /home/claude/tools/i18n_gen.py) */
+var LANGS = ["tr", "en", "zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur"];
+var I18N = {
+  settings: ["Ayarlar", "Settings", "设置", "सेटिंग्स", "Ajustes", "Réglages", "الإعدادات", "সেটিংস", "Configurações", "Настройки", "ترتیبات"],
+  pause: ["Duraklat", "Pause", "暂停", "रोकें", "Pausa", "Pause", "إيقاف مؤقت", "বিরতি", "Pausar", "Пауза", "روکیں"],
+  fullscreen: ["Tam ekran", "Full screen", "全屏", "फ़ुल स्क्रीन", "Pantalla completa", "Plein écran", "ملء الشاشة", "পূর্ণ স্ক্রিন", "Tela cheia", "Полный экран", "پوری اسکرین"],
+  ad: ["Reklam", "Ad", "广告", "विज्ञापन", "Anuncio", "Pub", "إعلان", "বিজ্ঞাপন", "Anúncio", "Реклама", "اشتہار"],
+  adReward: ["Ödülün birazdan geliyor…", "Your reward is on its way…", "奖励马上就到…", "आपका इनाम आ रहा है…", "Tu premio está en camino…", "Ta récompense arrive…", "مكافأتك في الطريق…", "তোমার পুরস্কার আসছে…", "Sua recompensa está chegando…", "Награда уже в пути…", "آپ کا انعام آ رہا ہے…"],
+  adSoon: ["Birazdan devam ediyoruz…", "Back in a moment…", "马上回来…", "बस एक पल…", "Volvemos enseguida…", "On revient tout de suite…", "نعود بعد لحظة…", "একটু পরেই ফিরছি…", "Já voltamos…", "Скоро продолжим…", "بس ایک لمحہ…"],
+  noAd: ["Reklam şu an yok", "No ad right now", "暂时没有广告", "अभी कोई विज्ञापन नहीं", "No hay anuncios ahora", "Pas de pub pour l'instant", "لا يوجد إعلان الآن", "এখন কোনো বিজ্ঞাপন নেই", "Nenhum anúncio agora", "Сейчас нет рекламы", "ابھی کوئی اشتہار نہیں"],
+  tryLater: ["Biraz sonra tekrar dene.", "Try again in a bit.", "请稍后再试。", "थोड़ी देर बाद फिर कोशिश करें।", "Inténtalo de nuevo en un rato.", "Réessaie un peu plus tard.", "حاول مرة أخرى بعد قليل.", "একটু পরে আবার চেষ্টা করো।", "Tente de novo daqui a pouco.", "Попробуй чуть позже.", "تھوڑی دیر بعد دوبارہ کوشش کریں۔"],
+  ok: ["Tamam", "OK", "好的", "ठीक है", "Vale", "OK", "حسنًا", "ঠিক আছে", "OK", "ОК", "ٹھیک ہے"],
+  paused: ["Duraklatıldı", "Paused", "已暂停", "रुका हुआ", "En pausa", "En pause", "متوقف مؤقتًا", "বিরতি", "Pausado", "Пауза", "رکا ہوا"],
+  resume: ["Devam et", "Resume", "继续", "जारी रखें", "Continuar", "Reprendre", "متابعة", "চালিয়ে যাও", "Continuar", "Продолжить", "جاری رکھیں"],
+  home: ["Ana sayfa", "Home", "主页", "होम", "Inicio", "Accueil", "الرئيسية", "হোম", "Início", "Главная", "ہوم"],
+  music: ["Müzik", "Music", "音乐", "संगीत", "Música", "Musique", "الموسيقى", "সংগীত", "Música", "Музыка", "موسیقی"],
+  sound: ["Ses", "Sound", "音效", "ध्वनि", "Sonido", "Son", "الصوت", "শব্দ", "Som", "Звук", "آواز"],
+  vibe: ["Titreşim", "Vibration", "振动", "कंपन", "Vibración", "Vibration", "الاهتزاز", "কম্পন", "Vibração", "Вибрация", "وائبریشن"],
+  on: ["Açık", "On", "开", "चालू", "Sí", "Oui", "تشغيل", "চালু", "Sim", "Вкл", "آن"],
+  off: ["Kapalı", "Off", "关", "बंद", "No", "Non", "إيقاف", "বন্ধ", "Não", "Выкл", "آف"],
+  close: ["Kapat", "Close", "关闭", "बंद करें", "Cerrar", "Fermer", "إغلاق", "বন্ধ করো", "Fechar", "Закрыть", "بند کریں"],
+  playAgain: ["Tekrar oyna", "Play again", "再玩一次", "फिर खेलें", "Jugar otra vez", "Rejouer", "العب مجددًا", "আবার খেলো", "Jogar de novo", "Ещё раз", "دوبارہ کھیلیں"],
+  restart: ["Baştan başla", "Start over", "重新开始", "फिर से शुरू", "Empezar de nuevo", "Recommencer", "ابدأ من جديد", "আবার শুরু", "Recomeçar", "Заново", "دوبارہ شروع"],
+  restartLevel: ["Bölümü baştan başla", "Restart level", "重新开始本关", "स्तर फिर से शुरू करें", "Reiniciar nivel", "Recommencer le niveau", "إعادة المرحلة", "লেভেল আবার শুরু করো", "Reiniciar fase", "Начать уровень заново", "لیول دوبارہ شروع کریں"],
+  boss: ["ZOR BÖLÜM", "HARD LEVEL", "困难关卡", "कठिन स्तर", "NIVEL DIFÍCIL", "NIVEAU DIFFICILE", "مرحلة صعبة", "কঠিন লেভেল", "FASE DIFÍCIL", "СЛОЖНЫЙ УРОВЕНЬ", "مشکل لیول"],
+  level: ["BÖLÜM", "LEVEL", "关卡", "स्तर", "NIVEL", "NIVEAU", "المرحلة", "লেভেল", "FASE", "УРОВЕНЬ", "لیول"],
+  tutorial: ["ÖĞRETİCİ", "TUTORIAL", "教程", "ट्यूटोरियल", "TUTORIAL", "TUTORIEL", "تدريب", "টিউটোরিয়াল", "TUTORIAL", "ОБУЧЕНИЕ", "ٹیوٹوریل"],
+  levelN: ["Bölüm {0}", "Level {0}", "第 {0} 关", "स्तर {0}", "Nivel {0}", "Niveau {0}", "المرحلة {0}", "লেভেল {0}", "Fase {0}", "Уровень {0}", "لیول {0}"],
+  lives: ["Kalan can: {0} / {1}", "Lives left: {0} / {1}", "剩余生命：{0} / {1}", "बची जानें: {0} / {1}", "Vidas: {0} / {1}", "Vies restantes : {0} / {1}", "الأرواح المتبقية: {0} / {1}", "বাকি জীবন: {0} / {1}", "Vidas: {0} / {1}", "Жизни: {0} / {1}", "باقی جانیں: {0} / {1}"],
+  coins: ["{0} mama parası", "{0} food coins", "{0} 枚食物币", "{0} खाने के सिक्के", "{0} monedas de comida", "{0} pièces de croquettes", "{0} عملة طعام", "{0}টি খাবারের কয়েন", "{0} moedas de comida", "Монет на корм: {0}", "{0} کھانے کے سکے"],
+  rules: ["Kurallar", "Rules", "规则", "नियम", "Reglas", "Règles", "القواعد", "নিয়ম", "Regras", "Правила", "اصول"],
+  found: ["Bulunan fareler: {0} / {1}", "Mice found: {0} / {1}", "已找到老鼠：{0} / {1}", "मिले चूहे: {0} / {1}", "Ratones encontrados: {0} / {1}", "Souris trouvées : {0} / {1}", "الفئران التي وُجدت: {0} / {1}", "পাওয়া ইঁদুর: {0} / {1}", "Ratos encontrados: {0} / {1}", "Найдено мышей: {0} / {1}", "ملے چوہے: {0} / {1}"],
+  grid: ["{0}×{0} bulmaca tablosu", "{0}×{0} puzzle board", "{0}×{0} 谜题棋盘", "{0}×{0} पहेली बोर्ड", "Tablero de {0}×{0}", "Grille {0}×{0}", "لوحة لغز {0}×{0}", "{0}×{0} ধাঁধার বোর্ড", "Tabuleiro {0}×{0}", "Поле {0}×{0}", "{0}×{0} پہیلی بورڈ"],
+  hintBtn: ["İpucu: fare olamayacak kareleri işaretle", "Hint: mark squares that can't hold a mouse", "提示：标出不可能有老鼠的格子", "संकेत: जिन खानों में चूहा नहीं हो सकता, उन्हें चिह्नित करें", "Pista: marca las casillas donde no puede haber ratón", "Indice : marque les cases sans souris possible", "تلميح: علِّم المربعات التي لا يمكن أن يكون فيها فأر", "ইঙ্গিত: যে ঘরে ইঁদুর থাকতে পারে না, সেগুলো চিহ্নিত করো", "Dica: marca as casas onde não pode haver rato", "Подсказка: отметить клетки, где мыши быть не может", "اشارہ: وہ خانے نشان زد کریں جہاں چوہا نہیں ہو سکتا"],
+  glassBtn: ["Büyüteç: bir fareyi göster", "Magnifier: reveal a mouse", "放大镜：找出一只老鼠", "आवर्धक: एक चूहा दिखाएँ", "Lupa: muestra un ratón", "Loupe : révèle une souris", "العدسة: أظهِر فأرًا", "আতশ কাচ: একটি ইঁদুর দেখাও", "Lupa: mostra um rato", "Лупа: показать мышь", "محدب عدسہ: ایک چوہا دکھائیں"],
+  usesLeft: [", {0} hak", ", {0} left", "，剩 {0} 次", ", {0} बचे", ", quedan {0}", ", {0} restants", "، المتبقي {0}", ", বাকি {0}", ", restam {0}", ", осталось {0}", "، {0} باقی"],
+  usesOut: [", hak bitti, reklamla al", ", none left, get more with an ad", "，次数用完，看广告获取", ", खत्म, विज्ञापन देखकर पाएँ", ", agotado, consigue más con un anuncio", ", épuisé, obtiens-en avec une pub", "، نفدت، احصل على المزيد بإعلان", ", শেষ, বিজ্ঞাপন দেখে নাও", ", acabou, ganhe mais com um anúncio", ", закончились, получи за рекламу", "، ختم، اشتہار سے حاصل کریں"],
+  cell: ["Satır {0}, sütun {1}: {2}", "Row {0}, column {1}: {2}", "第 {0} 行，第 {1} 列：{2}", "पंक्ति {0}, स्तंभ {1}: {2}", "Fila {0}, columna {1}: {2}", "Ligne {0}, colonne {1} : {2}", "الصف {0}، العمود {1}: {2}", "সারি {0}, কলাম {1}: {2}", "Linha {0}, coluna {1}: {2}", "Ряд {0}, столбец {1}: {2}", "قطار {0}، کالم {1}: {2}"],
+  cClosed: ["kapalı", "closed", "未翻开", "बंद", "cerrada", "fermée", "مغلق", "বন্ধ", "fechada", "закрыта", "بند"],
+  cPaw: ["pati işareti", "paw mark", "爪印", "पंजे का निशान", "marca de pata", "marque de patte", "علامة مخلب", "থাবার চিহ্ন", "marca de pata", "метка-лапка", "پنجے کا نشان"],
+  cMouse: ["fare", "mouse", "老鼠", "चूहा", "ratón", "souris", "فأر", "ইঁদুর", "rato", "мышь", "چوہا"],
+  rule1: ["Her renkte 1 fare", "1 mouse per color", "每种颜色 1 只老鼠", "हर रंग में 1 चूहा", "1 ratón por color", "1 souris par couleur", "فأر واحد لكل لون", "প্রতি রঙে ১টি ইঁদুর", "1 rato por cor", "1 мышь на цвет", "ہر رنگ میں 1 چوہا"],
+  rule2: ["Her satır ve sütunda 1 fare", "1 mouse per row and column", "每行每列 1 只老鼠", "हर पंक्ति और स्तंभ में 1 चूहा", "1 ratón por fila y columna", "1 souris par ligne et colonne", "فأر واحد في كل صف وعمود", "প্রতি সারি ও কলামে ১টি ইঁদুর", "1 rato por linha e coluna", "1 мышь в ряду и столбце", "ہر قطار اور کالم میں 1 چوہا"],
+  rule3: ["Fareler birbirine değmez", "Mice never touch", "老鼠互不相邻", "चूहे एक-दूसरे को नहीं छूते", "Los ratones no se tocan", "Les souris ne se touchent pas", "الفئران لا تتلامس", "ইঁদুররা একে অপরকে ছোঁয় না", "Os ratos não se tocam", "Мыши не касаются друг друга", "چوہے ایک دوسرے کو نہیں چھوتے"],
+  skip: ["Geç", "Skip", "跳过", "छोड़ें", "Saltar", "Passer", "تخطَّ", "বাদ দাও", "Pular", "Пропустить", "چھوڑیں"],
+  tut1: ["Her renkte bir fare saklanıyor. Buraya iki kez hızlıca dokun!", "A mouse hides in every color. Double-tap here!", "每种颜色里都藏着一只老鼠。快速点这里两下！", "हर रंग में एक चूहा छिपा है। यहाँ जल्दी से दो बार टैप करें!", "En cada color se esconde un ratón. ¡Toca aquí dos veces rápido!", "Une souris se cache dans chaque couleur. Touche ici deux fois vite !", "في كل لون فأر مختبئ. انقر هنا مرتين بسرعة!", "প্রতিটি রঙে একটি ইঁদুর লুকিয়ে আছে। এখানে দ্রুত দুবার ট্যাপ করো!", "Em cada cor há um rato escondido. Toque aqui duas vezes rápido!", "В каждом цвете прячется мышь. Быстро нажми сюда дважды!", "ہر رنگ میں ایک چوہا چھپا ہے۔ یہاں جلدی سے دو بار ٹیپ کریں!"],
+  tut2: ["Bu renkte tek kare var. İki kez dokun!", "This color has only one square. Double-tap it!", "这种颜色只有一个格子。点两下！", "इस रंग में सिर्फ़ एक खाना है। दो बार टैप करें!", "Este color tiene una sola casilla. ¡Tócala dos veces!", "Cette couleur n'a qu'une case. Touche-la deux fois !", "هذا اللون فيه مربع واحد فقط. انقر مرتين!", "এই রঙে মাত্র একটি ঘর। দুবার ট্যাপ করো!", "Esta cor tem só uma casa. Toque duas vezes!", "В этом цвете одна клетка. Нажми дважды!", "اس رنگ میں صرف ایک خانہ ہے۔ دو بار ٹیپ کریں!"],
+  tut3: ["Sıra sende", "Your turn", "轮到你了", "अब आपकी बारी", "Te toca", "À toi", "دورك", "এবার তোমার পালা", "Sua vez", "Твой ход", "آپ کی باری"],
+  tut4: ["Son fareyi sen bul!", "Find the last mouse!", "找出最后一只老鼠！", "आख़िरी चूहा खोजें!", "¡Encuentra el último ratón!", "Trouve la dernière souris !", "اعثر على الفأر الأخير!", "শেষ ইঁদুরটা খুঁজে বের করো!", "Encontre o último rato!", "Найди последнюю мышь!", "آخری چوہا ڈھونڈیں!"],
+  tutWrong: ["Burada olamaz. Tekrar dene!", "Can't be here. Try again!", "不可能在这里。再试一次！", "यहाँ नहीं हो सकता। फिर कोशिश करें!", "Aquí no puede estar. ¡Prueba otra vez!", "Pas possible ici. Réessaie !", "لا يمكن أن يكون هنا. حاول مجددًا!", "এখানে থাকতে পারে না। আবার চেষ্টা করো!", "Não pode estar aqui. Tente de novo!", "Здесь её быть не может. Попробуй ещё!", "یہاں نہیں ہو سکتا۔ دوبارہ کوشش کریں!"],
+  tutRow: ["Aynı satırda başka fare olmaz", "No other mouse in the same row", "同一行不会有别的老鼠", "उसी पंक्ति में दूसरा चूहा नहीं होता", "No hay otro ratón en la misma fila", "Pas d'autre souris sur la même ligne", "لا فأر آخر في الصف نفسه", "একই সারিতে আর কোনো ইঁদুর নেই", "Não há outro rato na mesma linha", "В этом ряду других мышей нет", "اسی قطار میں کوئی اور چوہا نہیں"],
+  tutCol: ["Aynı sütunda da olmaz", "Or in the same column", "同一列也不会有", "उसी स्तंभ में भी नहीं", "Ni en la misma columna", "Ni dans la même colonne", "ولا في العمود نفسه", "একই কলামেও না", "Nem na mesma coluna", "И в этом столбце тоже", "اسی کالم میں بھی نہیں"],
+  tutColor: ["Aynı renkte de olmaz", "Or in the same color", "同一颜色也不会有", "उसी रंग में भी नहीं", "Ni en el mismo color", "Ni dans la même couleur", "ولا في اللون نفسه", "একই রঙেও না", "Nem na mesma cor", "И в этом цвете тоже", "اسی رنگ میں بھی نہیں"],
+  tutTap: ["Tek dokunuş pati koyar ya da kaldırır.", "One tap places or removes a paw.", "点一下放置或移除爪印。", "एक टैप से पंजा लगता या हटता है।", "Un toque pone o quita una pata.", "Un appui pose ou retire une patte.", "نقرة واحدة تضع مخلبًا أو تزيله.", "এক ট্যাপে থাবা বসে বা সরে যায়।", "Um toque coloca ou tira uma pata.", "Одно касание ставит или убирает лапку.", "ایک ٹیپ پنجہ لگاتا یا ہٹاتا ہے۔"],
+  tip: ["Her satırda, sütunda ve renkte 1 fare var; fareler birbirine değmez.", "Each row, column and color has 1 mouse; mice never touch.", "每行、每列、每种颜色各有 1 只老鼠；老鼠互不相邻。", "हर पंक्ति, स्तंभ और रंग में 1 चूहा है; चूहे एक-दूसरे को नहीं छूते।", "Cada fila, columna y color tiene 1 ratón; los ratones no se tocan.", "Chaque ligne, colonne et couleur a 1 souris ; elles ne se touchent pas.", "في كل صف وعمود ولون فأر واحد، والفئران لا تتلامس.", "প্রতিটি সারি, কলাম ও রঙে ১টি ইঁদুর; ইঁদুররা একে অপরকে ছোঁয় না।", "Cada linha, coluna e cor tem 1 rato; os ratos não se tocam.", "В каждом ряду, столбце и цвете 1 мышь; мыши не касаются.", "ہر قطار، کالم اور رنگ میں 1 چوہا ہے؛ چوہے ایک دوسرے کو نہیں چھوتے۔"],
+  winAgain: ["Yine başardın!", "You did it again!", "又成功了！", "फिर से कर दिखाया!", "¡Lo lograste otra vez!", "Encore réussi !", "نجحت مرة أخرى!", "আবারও পেরেছ!", "Conseguiu de novo!", "Снова получилось!", "پھر کامیاب!"],
+  winTitle: ["Bölüm tamam!", "Level complete!", "过关啦！", "स्तर पूरा!", "¡Nivel superado!", "Niveau réussi !", "اكتملت المرحلة!", "লেভেল শেষ!", "Fase concluída!", "Уровень пройден!", "لیول مکمل!"],
+  stars: ["3 yıldızdan {0}", "{0} of 3 stars", "3 颗星中的 {0} 颗", "3 में से {0} सितारे", "{0} de 3 estrellas", "{0} étoiles sur 3", "{0} من 3 نجوم", "৩টির মধ্যে {0}টি তারা", "{0} de 3 estrelas", "{0} из 3 звёзд", "3 میں سے {0} ستارے"],
+  time: ["Süre:", "Time:", "用时：", "समय:", "Tiempo:", "Temps :", "الوقت:", "সময়:", "Tempo:", "Время:", "وقت:"],
+  next: ["Sonraki bölüm", "Next level", "下一关", "अगला स्तर", "Siguiente", "Suivant", "المرحلة التالية", "পরের লেভেল", "Próxima fase", "Дальше", "اگلا لیول"],
+  tutWin: ["Harika! Kuralları öğrendin", "Great! You know the rules", "太棒了！你学会规则了", "बढ़िया! आपने नियम सीख लिए", "¡Genial! Ya sabes las reglas", "Super ! Tu connais les règles", "رائع! تعلّمت القواعد", "দারুণ! নিয়ম শিখে গেছ", "Ótimo! Você aprendeu as regras", "Отлично! Правила ясны", "زبردست! آپ نے اصول سیکھ لیے"],
+  startGame: ["Oyuna başla", "Start playing", "开始游戏", "खेल शुरू करें", "Empezar a jugar", "Commencer", "ابدأ اللعب", "খেলা শুরু করো", "Começar", "Играть", "کھیل شروع کریں"],
+  outTitle: ["Canın bitti", "Out of lives", "生命用完了", "जानें खत्म", "Sin vidas", "Plus de vies", "نفدت الأرواح", "জীবন শেষ", "Sem vidas", "Жизни кончились", "جانیں ختم"],
+  outText: ["Canların dolsun, kaldığın yerden devam et.", "Refill your lives and pick up where you left off.", "补满生命，从刚才的地方继续。", "जानें भरें और वहीं से जारी रखें।", "Recupera tus vidas y sigue donde ibas.", "Recharge tes vies et reprends où tu en étais.", "املأ أرواحك وتابع من حيث توقفت.", "জীবন ভরে নাও, যেখানে ছিলে সেখান থেকে চালাও।", "Recupere as vidas e continue de onde parou.", "Восстанови жизни и продолжай с того же места.", "جانیں بھریں اور وہیں سے جاری رکھیں۔"],
+  adLife: ["Reklam izle, canlar dolsun", "Watch an ad, refill lives", "看广告补满生命", "विज्ञापन देखें, जानें भरें", "Mira un anuncio y recupera vidas", "Regarde une pub, récupère tes vies", "شاهد إعلانًا لتملأ الأرواح", "বিজ্ঞাপন দেখো, জীবন ভরো", "Veja um anúncio e recupere vidas", "Реклама — и жизни снова полны", "اشتہار دیکھیں، جانیں بھریں"],
+  hintsOut: ["İpucu hakkın bitti", "Out of hints", "提示用完了", "संकेत खत्म", "Sin pistas", "Plus d'indices", "نفدت التلميحات", "ইঙ্গিত শেষ", "Sem dicas", "Подсказки кончились", "اشارے ختم"],
+  glassOut: ["Büyüteç hakkın bitti", "Out of magnifiers", "放大镜用完了", "आवर्धक खत्म", "Sin lupas", "Plus de loupes", "نفدت العدسات", "আতশ কাচ শেষ", "Sem lupas", "Лупы кончились", "عدسے ختم"],
+  adPlus: ["Reklam izle, +{0} hak", "Watch an ad, +{0} uses", "看广告，+{0} 次", "विज्ञापन देखें, +{0}", "Mira un anuncio, +{0}", "Regarde une pub, +{0}", "شاهد إعلانًا، +{0}", "বিজ্ঞাপন দেখো, +{0}", "Veja um anúncio, +{0}", "Реклама: +{0}", "اشتہار دیکھیں، +{0}"],
+  cancel: ["Vazgeç", "No thanks", "不用了", "रहने दें", "No, gracias", "Non merci", "لا، شكرًا", "থাক", "Agora não", "Нет, спасибо", "رہنے دیں"],
+  preparing: ["Hazırlanıyor…", "Getting ready…", "准备中…", "तैयार हो रहा है…", "Preparando…", "Préparation…", "جارٍ التحضير…", "প্রস্তুত হচ্ছে…", "Preparando…", "Готовим…", "تیاری ہو رہی ہے…"]
+};
+/* ---------- Dil: ortak ayar localStorage "mappyLang" (3 sayfada aynı kod). Varsayılan: tarayıcı dili listedeyse o, yoksa İngilizce ---------- */
+var LANG_KEY = 'mappyLang';
+var LANG_NAMES = ['Türkçe', 'English', '中文', 'हिन्दी', 'Español', 'Français', 'العربية', 'বাংলা', 'Português', 'Русский', 'اردو'];
+var LANG_CODES = ['TR', 'EN', '中文', 'HI', 'ES', 'FR', 'AR', 'BN', 'PT', 'RU', 'UR'];
+/* ana yazı tipi (Baloo 2: Latin + Devanagari) bu yazıları kapsamaz: o dil seçiliyse uygun aile ayrıca yüklenir */
+var LANG_FONTS = { zh: 'Noto+Sans+SC:wght@700;800', ar: 'Baloo+Bhaijaan+2:wght@600;700;800', ur: 'Baloo+Bhaijaan+2:wght@600;700;800',
+                   bn: 'Baloo+Da+2:wght@600;700;800', ru: 'Nunito:wght@700;800' };
+function readLang() {
+  var s = null, list, i, l;
+  try { s = window.localStorage.getItem(LANG_KEY); } catch (e) {}
+  if (s && LANGS.indexOf(s) >= 0) return s;
+  list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || navigator.userLanguage || 'en'];
+  for (i = 0; i < list.length; i++) {
+    l = String(list[i] || '').toLowerCase().split(/[-_]/)[0];
+    if (LANGS.indexOf(l) >= 0) return l;
+  }
+  return 'en';
+}
+var LANG = 'en', LI = 1, RTL = false;
+function setLang(l) {
+  LANG = l; LI = LANGS.indexOf(l); RTL = l === 'ar' || l === 'ur';
+  document.documentElement.lang = l === 'zh' ? 'zh-Hans' : l;
+  loadLangFont(l);
+}
+function saveLang() { try { window.localStorage.setItem(LANG_KEY, LANG); } catch (e) {} }
+function loadLangFont(l) {
+  var f = LANG_FONTS[l], id = 'font-' + l;
+  if (!f || document.getElementById(id)) return;
+  var ln = document.createElement('link');
+  ln.id = id; ln.rel = 'stylesheet'; ln.href = 'https://fonts.googleapis.com/css2?family=' + f + '&display=swap';
+  document.head.appendChild(ln);
+}
+/* t('key', a, b) → çeviri; {0}, {1} yerine argümanlar. Eksikse İngilizce. */
+function t(k) {
+  var row = I18N[k], v, i;
+  if (!row) return k;
+  v = row[LI];
+  if (v == null || v === '') v = row[1];
+  for (i = 1; i < arguments.length; i++) v = v.split('{' + (i - 1) + '}').join(String(arguments[i]));
+  return v;
+}
+/* Arapça / Urduca: yalnızca yazı kaplarına dir="rtl" (oyun yerleşimi değişmez) */
+function textDir(el) { if (!el) return; if (RTL) el.setAttribute('dir', 'rtl'); else el.removeAttribute('dir'); }
+/* tek satırlık yazı sığmazsa yazı boyunu küçült (en çok %40) */
+function fitText(el) {
+  if (!el || !el.offsetParent) return;
+  el.style.fontSize = '';
+  var fs = parseFloat(window.getComputedStyle(el).fontSize), min = fs * 0.6, n = 0;
+  while (el.scrollWidth > el.clientWidth + 1 && fs > min && n++ < 24) { fs *= 0.93; el.style.fontSize = fs.toFixed(2) + 'px'; }
+}
+function fitAll(root, sel) { var l = (root || document).querySelectorAll(sel), i; for (i = 0; i < l.length; i++) fitText(l[i]); }
+setLang(readLang());
+/* geri/ileri ile önbellekten açılan sayfa başka dilde kaldıysa yenile */
+window.addEventListener('pageshow', function (e) { if (e.persisted && readLang() !== LANG) window.location.reload(); });
+/* @@I18N-END */
+
 /* =====================================================================
    FARE BULMACA — bölümler: A rng, B sayan çözücü, C zorluk ölçer, D üretici,
    E ilerleme (hedef, ZP), F kayıt, G sabitler, H oyun durumu, I yardımcılar,
@@ -1039,12 +1170,23 @@ function starsHTML(n) {
 function renderStatic() {
   var isTut = MODE === 'tut';
   $('stage').classList.toggle('is-tut', isTut);
-  $('levelK').textContent = isTut ? 'ÖĞRETİCİ' : 'BÖLÜM';
+  $('levelK').textContent = isTut ? t('tutorial') : t('level');
   if (isTut) { $('levelNo').innerHTML = ''; $('levelNo').removeAttribute('data-v'); }
-  else setDigits($('levelNo'), String(LEVEL.L), 30, 'Bölüm ' + LEVEL.L);
+  else setDigits($('levelNo'), String(LEVEL.L), 30, t('levelN', LEVEL.L));
+  fitPlaque();
   $('boss').hidden = isTut || !LEVEL.boss;
   setDigits($('coinNum'), String(P.coins), 18);
-  $('coins').setAttribute('aria-label', fmtCoins(P.coins) + ' mama parası');
+  $('coins').setAttribute('aria-label', t('coins', fmtCoins(P.coins)));
+}
+
+/* plakadaki kelime (BÖLÜM / çevirisi) rakamlarla birlikte krem alana sığsın: 9.4cqw'den gerektiği kadar küçülür */
+function fitPlaque() {
+  var k = $('levelK'), n = $('levelNo'), line = k.parentNode;
+  k.style.fontSize = '';
+  if (!line || !line.clientWidth) return;
+  var gap = parseFloat(window.getComputedStyle(line).columnGap) || 0;
+  var avail = line.clientWidth * 0.84 - (n.offsetWidth ? n.offsetWidth + gap : 0), kw = k.offsetWidth;
+  if (kw > avail && kw > 0) k.style.fontSize = Math.max(5, 9.4 * avail / kw).toFixed(2) + 'cqw';
 }
 
 /* ---------- süre ---------- */
@@ -1155,7 +1297,7 @@ function onGameOver() {
 /* =====================================================================
    K. ÇİZİM
    ===================================================================== */
-var CELL_LABEL = { closed: 'kapalı', paw: 'pati işareti', mouse: 'fare' };
+var CELL_LABEL = { closed: 'cClosed', paw: 'cPaw', mouse: 'cMouse' };
 
 function buildBoard() {
   var n = LEVEL.size, grid = $('grid'), r, c;
@@ -1163,7 +1305,7 @@ function buildBoard() {
   $('stage').style.setProperty('--n', n);
   fitLayout();
   buildRegionTab();
-  grid.setAttribute('aria-label', n + "'ye " + n + ' bulmaca tablosu');
+  grid.setAttribute('aria-label', t('grid', n));
   grid.textContent = '';
   view.cells = [];
   for (r = 0; r < n; r++) {
@@ -1211,7 +1353,7 @@ function paintCell(r, c) {
     var mini = view.minis[regionOf(r, c)];
     if (mini && !mini.on) { mini.on = true; startPet(mini.pet); }
   }
-  v.btn.setAttribute('aria-label', 'Satır ' + (r + 1) + ', sütun ' + (c + 1) + ': ' + CELL_LABEL[st]);
+  v.btn.setAttribute('aria-label', t('cell', r + 1, c + 1, t(CELL_LABEL[st])));
 }
 
 /* çerçevenin üstündeki sekme: bölge sırasıyla her bölgenin düz karesi + boş delik (çıkış karesi 0);
@@ -1239,27 +1381,28 @@ function buildRegionTab() {
 
 /* kural şeridi: 3 kart; her birinde 3x3 mini resim (k = kare, p = pati, m = fare) */
 var RULES = [
-  ['Her renkte 1 fare', [[2,'p'],[2,'p'],[2,'m'], [2,'p'],[2,'p'],[2,'p'], [2,'p'],[2,'p'],[2,'p']]],
-  ['Her satır ve sütunda 1 fare', [[4,'k'],[1,'p'],[5,'k'], [0,'p'],[1,'m'],[6,'p'], [4,'k'],[1,'p'],[5,'k']]],
-  ['Fareler birbirine değmez', [[7,'p'],[7,'p'],[3,'p'], [0,'p'],[3,'m'],[3,'p'], [0,'p'],[0,'p'],[6,'p']]]
+  ['rule1', [[2,'p'],[2,'p'],[2,'m'], [2,'p'],[2,'p'],[2,'p'], [2,'p'],[2,'p'],[2,'p']]],
+  ['rule2', [[4,'k'],[1,'p'],[5,'k'], [0,'p'],[1,'m'],[6,'p'], [4,'k'],[1,'p'],[5,'k']]],
+  ['rule3', [[7,'p'],[7,'p'],[3,'p'], [0,'p'],[3,'m'],[3,'p'], [0,'p'],[0,'p'],[6,'p']]]
 ];
 function buildRules() {
   var html = '', i, k;
   for (i = 0; i < RULES.length; i++) {
     html += '<div class="rule"><span class="mini3" aria-hidden="true">';
     for (k = 0; k < 9; k++) {
-      var t = RULES[i][1][k];
-      html += '<span><img src="' + (t[1] === 'k' ? 'kare-' : 'pati-') + t[0] + '.webp" width="12" height="12" alt="">' +
-              (t[1] === 'm' ? '<i class="rm"></i>' : '') + '</span>';
+      var cl = RULES[i][1][k];
+      html += '<span><img src="' + (cl[1] === 'k' ? 'kare-' : 'pati-') + cl[0] + '.webp" width="12" height="12" alt="">' +
+              (cl[1] === 'm' ? '<i class="rm"></i>' : '') + '</span>';
     }
-    html += '</span><p>' + RULES[i][0] + '</p></div>';
+    html += '</span><p>' + t(RULES[i][0]) + '</p></div>';
   }
   $('rules').innerHTML = html;
+  textDir($('rules'));
 }
 
 function updateHud() {
   var n = LEVEL.size, play = canPlay() && MODE !== 'tut';
-  $('regTab').setAttribute('aria-label', 'Bulunan fareler: ' + S.found + ' / ' + n);
+  $('regTab').setAttribute('aria-label', t('found', S.found, n));
   var lives = $('lives');
   var hearts = lives.getElementsByTagName('img'), hi;
   for (hi = 0; hi < hearts.length; hi++) {
@@ -1270,10 +1413,10 @@ function updateHud() {
     }
   }
   lives.classList.toggle('out', S.lives <= 0);
-  lives.setAttribute('aria-label', 'Kalan can: ' + Math.max(0, S.lives) + ' / ' + START_LIVES);
+  lives.setAttribute('aria-label', t('lives', Math.max(0, S.lives), START_LIVES));
 
-  setHelpButton('btnHint', 'badgeHint', P.bulb, 'İpucu: fare olamayacak kareleri işaretle', play);
-  setHelpButton('btnGlass', 'badgeGlass', P.glass, 'Büyüteç: bir fareyi göster', play);
+  setHelpButton('btnHint', 'badgeHint', P.bulb, t('hintBtn'), play);
+  setHelpButton('btnGlass', 'badgeGlass', P.glass, t('glassBtn'), play);
   $('pause').disabled = !(S.status === 'play' && !overlayOpen);
   $('settings').disabled = overlayOpen;
   $('back').disabled = !S || overlayOpen;
@@ -1288,7 +1431,7 @@ function setHelpButton(btnId, badgeId, count, label, enabled) {
     badge.innerHTML = '<img src="ui-arti.webp" width="63" height="64" alt="">';
   }
   badge.classList.toggle('plus', count <= 0);
-  btn.setAttribute('aria-label', label + (count > 0 ? ', ' + count + ' hak' : ', hak bitti, reklamla al'));
+  btn.setAttribute('aria-label', label + (count > 0 ? t('usesLeft', count) : t('usesOut')));
 }
 
 /* ---------- fare sprite oynatıcı ---------- */
@@ -1580,10 +1723,10 @@ function useGlass() {
    N. ÖĞRETİCİ (bölüm 0)
    ===================================================================== */
 var TUT_STEPS = [
-  { cell: [0, 1], say: 'Her renkte bir fare saklanıyor. Buraya iki kez hızlıca dokun!', teach: true },
-  { cell: [1, 3], say: 'Bu renkte tek kare var. İki kez dokun!', teach: false },
-  { cell: [3, 2], say: 'Sıra sende', teach: false },
-  { cell: null, say: 'Son fareyi sen bul!', teach: false }
+  { cell: [0, 1], say: 'tut1', teach: true },
+  { cell: [1, 3], say: 'tut2', teach: false },
+  { cell: [3, 2], say: 'tut3', teach: false },
+  { cell: null, say: 'tut4', teach: false }
 ];
 
 function startTutorial() {
@@ -1593,18 +1736,18 @@ function startTutorial() {
   tut = { step: 0, busy: false, sayT: 0 };
   resetLevel();
   $('tutBox').hidden = false;
-  $('tutSkip').textContent = 'Geç';
+  $('tutSkip').textContent = t('skip');
   $('tutSkip').hidden = true;
   $('tutSkip').setAttribute('data-act', 'tutSkip');
   tutShowStep();
   pregen(1);
 }
 
-function tutSay(text) { $('tutText').textContent = text; }
+function tutSay(text) { $('tutText').textContent = text; textDir($('tutBox')); }
 
 function tutShowStep() {
   var st = TUT_STEPS[tut.step];
-  tutSay(st.say);
+  tutSay(t(st.say));
   $('tutSkip').hidden = tut.step === 0;
   tutPoint(st.cell);
 }
@@ -1625,9 +1768,9 @@ function tutAllows(r, c) {
 }
 
 function tutOnMistake() {
-  tutSay('Burada olamaz. Tekrar dene!');
+  tutSay(t('tutWrong'));
   clearTimeout(tut.sayT);
-  tut.sayT = fx(function () { if (tut) tutSay(TUT_STEPS[tut.step].say); }, 1600);
+  tut.sayT = fx(function () { if (tut) tutSay(t(TUT_STEPS[tut.step].say)); }, 1600);
 }
 
 /* fare açıldı: dışlanan kareler sırayla pati olur, sonra sonraki adım */
@@ -1650,14 +1793,14 @@ function tutOnReveal(r, c) {
     return out;
   }
   var groups = [
-    ['Aynı satırda başka fare olmaz', group(function (k) { return k === r; })],
-    ['Aynı sütunda da olmaz', group(function (k, m) { return m === c; })],
-    ['Aynı renkte de olmaz', group(function (k, m) { return regionOf(k, m) === g; })],
-    ['Fareler birbirine değmez', group(function (k, m) { return Math.abs(k - r) <= 1 && Math.abs(m - c) <= 1; })]
+    [t('tutRow'), group(function (k) { return k === r; })],
+    [t('tutCol'), group(function (k, m) { return m === c; })],
+    [t('tutColor'), group(function (k, m) { return regionOf(k, m) === g; })],
+    [t('rule3'), group(function (k, m) { return Math.abs(k - r) <= 1 && Math.abs(m - c) <= 1; })]
   ];
   tut.busy = true;
   updateHud();
-  var t = REDUCED ? 300 : 1300, gi, ci;
+  var tm = REDUCED ? 300 : 1300, gi, ci;
   for (gi = 0; gi < groups.length; gi++) {
     if (!groups[gi][1].length) continue;
     (function (gr, at) {
@@ -1665,12 +1808,12 @@ function tutOnReveal(r, c) {
       for (ci = 0; ci < gr[1].length; ci++) (function (cell, at2) {
         fx(function () { markPaw(cell[0], cell[1]); }, at2);
       })(gr[1][ci], at + 350 + ci * 120);
-    })(groups[gi], t);
-    t += 350 + groups[gi][1].length * 120 + 1300;
+    })(groups[gi], tm);
+    tm += 350 + groups[gi][1].length * 120 + 1300;
   }
-  fx(function () { tutSay('Tek dokunuş pati koyar ya da kaldırır.'); }, t);
-  t += REDUCED ? 600 : 2200;
-  fx(next, t);
+  fx(function () { tutSay(t('tutTap')); }, tm);
+  tm += REDUCED ? 600 : 2200;
+  fx(next, tm);
 }
 
 function endTutorialUI() {
@@ -1693,8 +1836,8 @@ var tipT = 0;
 function showTip() {
   var box = $('tutBox');
   box.classList.add('tip');
-  tutSay('Her satırda, sütunda ve renkte 1 fare var; fareler birbirine değmez.');
-  $('tutSkip').textContent = 'Tamam';
+  tutSay(t('tip'));
+  $('tutSkip').textContent = t('ok');
   $('tutSkip').setAttribute('data-act', 'tipClose');
   $('tutSkip').hidden = false;
   box.hidden = false;
@@ -1743,17 +1886,17 @@ var AD_MIN_LEVEL = 4, AD_MIN_MS = 3 * 60 * 1000, AD_PROFILE_MIN_OFFERS = 5;
 var SimAdProvider = {
   show: function (title, cb) {
     openOverlay(
-      '<h2 id="ovTitle">Reklam</h2>' +
+      '<h2 id="ovTitle">' + t('ad') + '</h2>' +
       '<p>' + title + '</p>' +
       '<div class="ad-bar" aria-hidden="true"><i></i></div>', false);
     setTimeout(cb, AD_SIM_MS);
   },
-  showRewarded: function (cb, failCb) { SimAdProvider.show('Ödülün birazdan geliyor…', cb); },
-  showInterstitial: function (cb) { SimAdProvider.show('Birazdan devam ediyoruz…', cb); },
+  showRewarded: function (cb, failCb) { SimAdProvider.show(t('adReward'), cb); },
+  showInterstitial: function (cb) { SimAdProvider.show(t('adSoon'), cb); },
   /* alt banner: ekranın en altındaki 60 px bantta 50 px açık gri şerit */
   showBanner: function () {
     var band = $('adBand');
-    if (!band.firstChild) band.innerHTML = '<div class="sim-banner">Reklam</div>';
+    if (!band.firstChild) band.innerHTML = '<div class="sim-banner">' + t('ad') + '</div>';
   },
   hideBanner: function () { $('adBand').textContent = ''; }
 };
@@ -1863,9 +2006,11 @@ function openOverlay(html, dismissible, cls) {
   var card = $('card');
   card.className = 'card' + (cls ? ' ' + cls : '');
   card.innerHTML = html;
+  textDir(card);
   $('overlay').hidden = false;
   overlayOpen = true;
   overlayDismiss = !!dismissible;
+  fitCard();
   $('stage').inert = true;
   syncClock();
   updateHud();
@@ -1874,6 +2019,8 @@ function openOverlay(html, dismissible, cls) {
   card.focus();
 }
 
+/* uzun çeviriler tek satıra sığsın */
+function fitCard() { fitAll($('card'), 'h2, .row-btn .cap, .acts.pair button, .main-btn, .txt-btn'); }
 function closeOverlay() {
   $('overlay').hidden = true;
   $('card').innerHTML = '';
@@ -1891,68 +2038,68 @@ var SPARKLES =
 function showWin(stars, coins) {
   var replay = MODE === 'replay';
   openOverlay(SPARKLES +
-    '<h2 id="ovTitle">' + (replay ? 'Yine başardın!' : 'Bölüm tamam!') + '</h2>' +
+    '<h2 id="ovTitle">' + (replay ? t('winAgain') : t('winTitle')) + '</h2>' +
     '<img class="win-cup" src="ik-kupa.webp" width="109" height="96" alt="">' +
-    '<div class="win-stars" role="img" aria-label="3 yıldızdan ' + stars + '">' + starsHTML(stars) + '</div>' +
-    '<p class="win-info">Süre: <b>' + fmtTime(elapsed()) + '</b>' +
+    '<div class="win-stars" role="img" aria-label="' + t('stars', stars) + '">' + starsHTML(stars) + '</div>' +
+    '<p class="win-info">' + t('time') + ' <b>' + fmtTime(elapsed()) + '</b>' +
     (coins > 0 ? '<span class="win-coins"><img src="ui-para.webp" width="97" height="96" alt="">' +
                  '<b>+' + coins + '</b></span>' : '') + '</p>' +
-    '<div class="acts pair"><button class="txt-btn" type="button" data-act="replay">Tekrar oyna</button>' +
-    '<button class="main-btn" type="button" data-act="next">Sonraki bölüm</button></div>');
+    '<div class="acts pair"><button class="txt-btn" type="button" data-act="replay">' + t('playAgain') + '</button>' +
+    '<button class="main-btn" type="button" data-act="next">' + t('next') + '</button></div>');
 }
 
 function showTutWin() {
   openOverlay(SPARKLES +
-    '<h2 id="ovTitle">Harika! Kuralları öğrendin</h2>' +
-    '<div class="acts"><button class="main-btn" type="button" data-act="tutDone">Oyuna başla</button></div>');
+    '<h2 id="ovTitle">' + t('tutWin') + '</h2>' +
+    '<div class="acts"><button class="main-btn" type="button" data-act="tutDone">' + t('startGame') + '</button></div>');
 }
 
 function showGameOver() {
   openOverlay(
-    '<h2 id="ovTitle">Canın bitti</h2>' +
-    '<p>Canların dolsun, kaldığın yerden devam et.</p>' +
-    '<div class="icon-row">' + adButton('adLife', 'Reklam izle, canlar dolsun', 'can') +
-    iconButton('restart', 'ik-yeniden.webp', 129, 'Baştan başla') + '</div>');
+    '<h2 id="ovTitle">' + t('outTitle') + '</h2>' +
+    '<p>' + t('outText') + '</p>' +
+    '<div class="icon-row">' + adButton('adLife', t('adLife'), 'can') +
+    iconButton('restart', 'ik-yeniden.webp', 129, t('restart')) + '</div>');
 }
 
 function showAdOffer(kind) {
-  var title = kind === 'hints' ? 'İpucu hakkın bitti' : 'Büyüteç hakkın bitti';
+  var title = kind === 'hints' ? t('hintsOut') : t('glassOut');
   openOverlay(
     '<h2 id="ovTitle">' + title + '</h2>' +
-    '<div class="acts">' + adButton(kind === 'hints' ? 'adHints' : 'adGlasses', 'Reklam izle, +' + AD_HELP_REWARD + ' hak',
+    '<div class="acts">' + adButton(kind === 'hints' ? 'adHints' : 'adGlasses', t('adPlus', AD_HELP_REWARD),
                                     kind === 'hints' ? 'ampul' : 'buyutec') +
-    '<button class="txt-btn" type="button" data-act="close">Vazgeç</button></div>', true);
+    '<button class="txt-btn" type="button" data-act="close">' + t('cancel') + '</button></div>', true);
 }
 
 /* reklam gelmedi (gerçek SDK'da olabilir) */
 function showAdFail(placement) {
   openOverlay(
-    '<h2 id="ovTitle">Reklam şu an yok</h2>' +
-    '<p>Biraz sonra tekrar dene.</p>' +
-    '<div class="acts"><button class="txt-btn" type="button" data-act="' + (placement === 'can' ? 'backToOver' : 'close') + '">Tamam</button></div>',
+    '<h2 id="ovTitle">' + t('noAd') + '</h2>' +
+    '<p>' + t('tryLater') + '</p>' +
+    '<div class="acts"><button class="txt-btn" type="button" data-act="' + (placement === 'can' ? 'backToOver' : 'close') + '">' + t('ok') + '</button></div>',
     placement !== 'can');
 }
 
 function showPause() {
   if (!S || S.status !== 'play' || overlayOpen) return;
   openOverlay(
-    '<h2 id="ovTitle">Duraklatıldı</h2>' +
+    '<h2 id="ovTitle">' + t('paused') + '</h2>' +
     '<div class="row-list">' +
-    rowButton('close', 'ik-oynat.webp', 130, 'Devam et') +
-    rowButton('home', 'ik-ev.webp', 129, 'Ana sayfa') + '</div>', true, 'menu');
+    rowButton('close', 'ik-oynat.webp', 130, t('resume')) +
+    rowButton('home', 'ik-ev.webp', 129, t('home')) + '</div>', true, 'menu');
 }
 
 /* ---------- Ayarlar: müzik / ses / titreşim (P.music / P.sfx / P.vibe) ---------- */
-var TOGGLES = { music: ['Müzik', 'ik-muzik'], sfx: ['Ses', 'ik-ses'], vibe: ['Titreşim', 'ik-titresim'] };
+var TOGGLES = { music: ['music', 'ik-muzik'], sfx: ['sound', 'ik-ses'], vibe: ['vibe', 'ik-titresim'] };
 function toggleSrc(key) { return TOGGLES[key][1] + (P[key] ? '' : '-kapali') + '.webp'; }
 function showSettings() {
   if (overlayOpen) return;
-  var html = '<h2 id="ovTitle">Ayarlar</h2><div class="row-list">', k;
+  var html = '<h2 id="ovTitle">' + t('settings') + '</h2><div class="row-list">', k;
   for (k in TOGGLES) if (TOGGLES.hasOwnProperty(k)) {
-    html += rowButton('toggle', toggleSrc(k), 128, TOGGLES[k][0],
-                      ' data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') + '"', P[k] ? 'Açık' : 'Kapalı');
+    html += rowButton('toggle', toggleSrc(k), 128, t(TOGGLES[k][0]),
+                      ' data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') + '"', P[k] ? t('on') : t('off'));
   }
-  html += rowButton('close', 'ik-kapat.webp', 129, 'Kapat') + '</div>';
+  html += rowButton('close', 'ik-kapat.webp', 129, t('close')) + '</div>';
   openOverlay(html, true, 'menu');
 }
 
@@ -1976,7 +2123,7 @@ var ACTIONS = {
     btn.setAttribute('aria-pressed', P[k] ? 'true' : 'false');
     btn.querySelector('img').setAttribute('src', toggleSrc(k));
     var stEl = btn.querySelector('.st');
-    if (stEl) stEl.textContent = P[k] ? 'Açık' : 'Kapalı';
+    if (stEl) stEl.textContent = P[k] ? t('on') : t('off');
     if (k === 'music') Music.sync();
     if (k === 'vibe' && P.vibe) vibrate(40);
   },
@@ -1987,7 +2134,7 @@ var ACTIONS = {
       if (P.cur && P.cur.L === L) { go(); return; }
       if (pre && pre.done && pre.fits(L, P.zp)) { go(); return; }
       btn.disabled = true;
-      btn.textContent = 'Hazırlanıyor…';
+      btn.textContent = t('preparing');
       setTimeout(go, 30);
     });
   },
@@ -2047,6 +2194,20 @@ function preload(list, done) {
   });
 })();
 
+/* sayfadaki sabit yazılar (HTML'deki Türkçe yedeklerin yerine seçili dil) */
+function applyTexts() {
+  $('settings').setAttribute('aria-label', t('settings'));
+  $('pause').setAttribute('aria-label', t('pause'));
+  $('back').setAttribute('aria-label', t('restartLevel'));
+  $('fs').setAttribute('aria-label', t('fullscreen'));
+  $('boss').textContent = t('boss');
+  $('levelK').textContent = t('level');
+  $('rules').setAttribute('aria-label', t('rules'));
+  $('tutSkip').textContent = t('skip');
+  $('btnHint').setAttribute('aria-label', t('hintBtn'));
+  $('btnGlass').setAttribute('aria-label', t('glassBtn'));
+}
+applyTexts();
 buildRules();
 $('grid').addEventListener('click', onCellClick);
 $('grid').addEventListener('dblclick', function (e) { e.preventDefault(); });   /* çift dokunuş yakınlaştırmasın */
@@ -2119,11 +2280,13 @@ function fitLayout() {
   stage.style.setProperty('--bw', bw.toFixed(2) + 'px');
 }
 var fitTimer = 0;
-function fitSoon() { clearTimeout(fitTimer); fitTimer = setTimeout(fitLayout, 60); }
+function fitSoon() { clearTimeout(fitTimer); fitTimer = setTimeout(function () { fitLayout(); fitPlaque(); if (overlayOpen) fitCard(); }, 60); }
 window.addEventListener('resize', fitSoon);
 window.addEventListener('orientationchange', fitSoon);
 document.addEventListener('fullscreenchange', fitSoon);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLayout);
+/* dile özel yazı tipi sonradan gelince yazılar yeniden sığdırılır */
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', function () { fitSoon(); if (overlayOpen) fitCard(); });
 fitLayout();
 
 /* Tam ekran tuşu (dikey kalır) */

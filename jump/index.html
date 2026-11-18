@@ -11,7 +11,8 @@
 :root{
   --ink:#3a2a5e;
   --ink-dim:#6f6089;
-  --font:"Baloo 2","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;
+  /* Baloo 2 = Latin + Devanagari; diğer yazılar için dil seçilince yüklenen aile + sistem yedekleri (kutu görünmesin) */
+  --font:"Baloo 2","Nunito","Baloo Bhaijaan 2","Baloo Da 2","Noto Sans SC","Arial Rounded MT Bold",system-ui,"Noto Sans","Noto Sans Devanagari","Noto Sans Bengali","Noto Naskh Arabic","Noto Nastaliq Urdu","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
   color-scheme:light;
   /* 1u = min(genişlik/390, yükseklik/844) px (küçük telefonda en az 1). JS (fitHud) kesin değeri yazar. */
   --u:max(min(100vw / 390, 100vh / 844), min(1px, 100vw / 360));
@@ -65,13 +66,15 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .steer.on{transform:scale(.92) translateY(calc(2*var(--u)));filter:brightness(1.06)}
 
 /* ---------- "Başlamak için dokun" ---------- */
-.tap{position:fixed;inset:0;z-index:20;border:0;padding:0;margin:0;width:100%;background:rgba(40,30,80,.22);
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:28vh}
+.tap{position:fixed;inset:0;z-index:20;border:0;padding:0;margin:0;width:100%;background:rgba(40,30,80,.12);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:50vh}
 .tap[hidden]{display:none}
-.tap .pill{padding:calc(12*var(--u)) calc(28*var(--u)) calc(8*var(--u));border-radius:calc(30*var(--u));
-  font-size:calc(24*var(--u));font-weight:800;color:#4a2500;background:url(../ui-btn-altin.webp) center/100% 100% no-repeat;
-  animation:tapPulse 1.2s ease-in-out infinite;white-space:nowrap}
-@keyframes tapPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+/* "EN İYİ" hapıyla aynı çerçeve: yarı saydam beyaz hap, mor yazı (tuş görünümü yok; tüm ekran dokunulabilir) */
+.tap .pill{display:inline-block;max-width:90vw;padding:calc(7*var(--u)) calc(20*var(--u)) calc(5*var(--u));border-radius:calc(22*var(--u));
+  font-size:calc(22*var(--u));font-weight:800;color:#5c35aa;letter-spacing:.02em;line-height:1.2;text-align:center;
+  background:rgba(255,255,255,.78);box-shadow:0 calc(2*var(--u)) 0 rgba(58,42,94,.25);
+  animation:tapPulse 1.6s ease-in-out infinite}
+@keyframes tapPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.86}}
 
 /* ---------- Kaplama kartları (puzzle ile aynı görünüm) ---------- */
 .overlay{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:calc(20*var(--u));background:rgba(58,42,94,.38)}
@@ -98,7 +101,8 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .row-btn{display:block;width:100%;min-height:calc(56*var(--u));margin:0 0 calc(12*var(--u));border:0;padding:0;background:none;border-radius:calc(28*var(--u));text-align:left}
 .row-btn:last-child{margin-bottom:0}
 .rb-in{display:flex;align-items:center;width:100%}
-.row-btn img{display:block;flex:0 0 calc(56*var(--u));width:calc(56*var(--u));height:calc(56*var(--u));border-radius:50%;margin-right:calc(12*var(--u));transition:transform .1s}
+.row-btn img{display:block;flex:0 0 calc(56*var(--u));width:calc(56*var(--u));height:calc(56*var(--u));border-radius:50%;margin-right:calc(12*var(--u));margin-inline-end:calc(12*var(--u));margin-inline-start:0;transition:transform .1s}
+.card[dir=rtl] .row-btn{text-align:right}
 .row-btn .cap{flex:1 1 auto;min-width:0;font-size:calc(20*var(--u));font-weight:800;line-height:1.1;color:var(--ink);white-space:nowrap}
 .row-btn .st{flex:0 0 auto;margin-left:calc(8*var(--u));font-size:calc(14*var(--u));font-weight:700;line-height:1;color:var(--ink-dim);white-space:nowrap}
 .row-btn:active img{transform:scale(.92)}
@@ -106,6 +110,10 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .ad-btn img{display:block;width:calc(68*var(--u));height:calc(68*var(--u));border-radius:50%;transition:transform .1s}
 .ad-btn .cap{font-size:calc(17*var(--u));font-weight:800;line-height:1.15;color:var(--ink);max-width:11em}
 .ad-btn:active img{transform:scale(.94)}
+.ad-btn:disabled{cursor:default;opacity:.55}
+.ad-btn:disabled img{filter:grayscale(1)}
+.ad-btn:disabled:active img{transform:none}
+.ad-btn .note{font-size:calc(13*var(--u));font-weight:700;color:var(--ink-dim);line-height:1.1}
 .main-btn,.txt-btn{
   min-width:calc(150*var(--u));height:calc(52*var(--u));border:0;border-radius:calc(26*var(--u));padding:calc(3*var(--u)) calc(22*var(--u)) 0;
   font-size:calc(20*var(--u));font-weight:800;background:center/100% 100% no-repeat;transition:transform .1s;
@@ -146,7 +154,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   </div>
   <div class="score">
     <div class="score-main"><span id="scoreNum"></span><span class="unit" aria-hidden="true">m</span></div>
-    <div class="best"><span class="k">EN İYİ</span><span id="bestNum"></span></div>
+    <div class="best"><span class="k" id="bestK">EN İYİ</span><span id="bestNum"></span></div>
   </div>
   <button class="ui-btn fs-btn" type="button" id="fs" aria-label="Tam ekran"><img src="../ui-fullscreen.webp" width="129" height="128" alt=""></button>
   <button class="steer left" type="button" id="btnL" aria-label="Sola git">
@@ -157,13 +165,106 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   </button>
 </div>
 
-<button class="tap" type="button" id="tapStart" aria-label="Başlamak için dokun"><span class="pill">Başlamak için dokun</span></button>
+<button class="tap" type="button" id="tapStart" aria-label="Başlamak için dokun"><span class="pill" id="tapText">Başlamak için dokun</span></button>
 
 <div class="overlay" id="overlay" hidden>
   <div class="card" id="card" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ovTitle"></div>
 </div>
 
 <script>
+/* @@I18N-BEGIN — çeviriler (sıra: tr en zh hi es fr ar bn pt ru ur); doğrudan burada düzenlenebilir (yerel üretici: /home/claude/tools/i18n_gen.py) */
+var LANGS = ["tr", "en", "zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur"];
+var I18N = {
+  settings: ["Ayarlar", "Settings", "设置", "सेटिंग्स", "Ajustes", "Réglages", "الإعدادات", "সেটিংস", "Configurações", "Настройки", "ترتیبات"],
+  pause: ["Duraklat", "Pause", "暂停", "रोकें", "Pausa", "Pause", "إيقاف مؤقت", "বিরতি", "Pausar", "Пауза", "روکیں"],
+  fullscreen: ["Tam ekran", "Full screen", "全屏", "फ़ुल स्क्रीन", "Pantalla completa", "Plein écran", "ملء الشاشة", "পূর্ণ স্ক্রিন", "Tela cheia", "Полный экран", "پوری اسکرین"],
+  ad: ["Reklam", "Ad", "广告", "विज्ञापन", "Anuncio", "Pub", "إعلان", "বিজ্ঞাপন", "Anúncio", "Реклама", "اشتہار"],
+  adReward: ["Ödülün birazdan geliyor…", "Your reward is on its way…", "奖励马上就到…", "आपका इनाम आ रहा है…", "Tu premio está en camino…", "Ta récompense arrive…", "مكافأتك في الطريق…", "তোমার পুরস্কার আসছে…", "Sua recompensa está chegando…", "Награда уже в пути…", "آپ کا انعام آ رہا ہے…"],
+  adSoon: ["Birazdan devam ediyoruz…", "Back in a moment…", "马上回来…", "बस एक पल…", "Volvemos enseguida…", "On revient tout de suite…", "نعود بعد لحظة…", "একটু পরেই ফিরছি…", "Já voltamos…", "Скоро продолжим…", "بس ایک لمحہ…"],
+  noAd: ["Reklam şu an yok", "No ad right now", "暂时没有广告", "अभी कोई विज्ञापन नहीं", "No hay anuncios ahora", "Pas de pub pour l'instant", "لا يوجد إعلان الآن", "এখন কোনো বিজ্ঞাপন নেই", "Nenhum anúncio agora", "Сейчас нет рекламы", "ابھی کوئی اشتہار نہیں"],
+  tryLater: ["Biraz sonra tekrar dene.", "Try again in a bit.", "请稍后再试。", "थोड़ी देर बाद फिर कोशिश करें।", "Inténtalo de nuevo en un rato.", "Réessaie un peu plus tard.", "حاول مرة أخرى بعد قليل.", "একটু পরে আবার চেষ্টা করো।", "Tente de novo daqui a pouco.", "Попробуй чуть позже.", "تھوڑی دیر بعد دوبارہ کوشش کریں۔"],
+  ok: ["Tamam", "OK", "好的", "ठीक है", "Vale", "OK", "حسنًا", "ঠিক আছে", "OK", "ОК", "ٹھیک ہے"],
+  paused: ["Duraklatıldı", "Paused", "已暂停", "रुका हुआ", "En pausa", "En pause", "متوقف مؤقتًا", "বিরতি", "Pausado", "Пауза", "رکا ہوا"],
+  resume: ["Devam et", "Resume", "继续", "जारी रखें", "Continuar", "Reprendre", "متابعة", "চালিয়ে যাও", "Continuar", "Продолжить", "جاری رکھیں"],
+  home: ["Ana sayfa", "Home", "主页", "होम", "Inicio", "Accueil", "الرئيسية", "হোম", "Início", "Главная", "ہوم"],
+  music: ["Müzik", "Music", "音乐", "संगीत", "Música", "Musique", "الموسيقى", "সংগীত", "Música", "Музыка", "موسیقی"],
+  sound: ["Ses", "Sound", "音效", "ध्वनि", "Sonido", "Son", "الصوت", "শব্দ", "Som", "Звук", "آواز"],
+  vibe: ["Titreşim", "Vibration", "振动", "कंपन", "Vibración", "Vibration", "الاهتزاز", "কম্পন", "Vibração", "Вибрация", "وائبریشن"],
+  on: ["Açık", "On", "开", "चालू", "Sí", "Oui", "تشغيل", "চালু", "Sim", "Вкл", "آن"],
+  off: ["Kapalı", "Off", "关", "बंद", "No", "Non", "إيقاف", "বন্ধ", "Não", "Выкл", "آف"],
+  close: ["Kapat", "Close", "关闭", "बंद करें", "Cerrar", "Fermer", "إغلاق", "বন্ধ করো", "Fechar", "Закрыть", "بند کریں"],
+  playAgain: ["Tekrar oyna", "Play again", "再玩一次", "फिर खेलें", "Jugar otra vez", "Rejouer", "العب مجددًا", "আবার খেলো", "Jogar de novo", "Ещё раз", "دوبارہ کھیلیں"],
+  restartRun: ["Yeniden başla", "Restart", "重新开始", "फिर से शुरू", "Reiniciar", "Recommencer", "ابدأ من جديد", "আবার শুরু", "Reiniciar", "Заново", "دوبارہ شروع"],
+  jumpArea: ["Mappy Jump oyun alanı. Sol ya da sağ yarıya basılı tut: yön ver.", "Mappy Jump play area. Hold the left or right half to steer.", "Mappy Jump 游戏区。按住左半边或右半边来控制方向。", "Mappy Jump खेल क्षेत्र। दिशा के लिए बायाँ या दायाँ हिस्सा दबाकर रखें।", "Zona de juego de Mappy Jump. Mantén pulsada la mitad izquierda o derecha para moverte.", "Zone de jeu Mappy Jump. Maintiens la moitié gauche ou droite pour diriger.", "منطقة لعب Mappy Jump. اضغط مطولًا على النصف الأيسر أو الأيمن للتوجيه.", "Mappy Jump খেলার জায়গা। দিক বদলাতে বাঁ বা ডান অর্ধেক চেপে ধরো।", "Área de jogo do Mappy Jump. Segure a metade esquerda ou direita para mover.", "Игровое поле Mappy Jump. Удерживай левую или правую половину, чтобы рулить.", "Mappy Jump کھیل کا علاقہ۔ سمت کے لیے بائیں یا دائیں حصے کو دبائے رکھیں۔"],
+  left: ["Sola git", "Go left", "向左", "बाएँ जाएँ", "Ir a la izquierda", "Aller à gauche", "اتجه يسارًا", "বাঁয়ে যাও", "Ir para a esquerda", "Влево", "بائیں جائیں"],
+  right: ["Sağa git", "Go right", "向右", "दाएँ जाएँ", "Ir a la derecha", "Aller à droite", "اتجه يمينًا", "ডানে যাও", "Ir para a direita", "Вправо", "دائیں جائیں"],
+  tapStart: ["Başlamak için dokun", "Tap to start", "点击开始", "शुरू करने के लिए टैप करें", "Toca para empezar", "Touche pour commencer", "انقر للبدء", "শুরু করতে ট্যাপ করো", "Toque para começar", "Нажми, чтобы начать", "شروع کرنے کے لیے ٹیپ کریں"],
+  best: ["EN İYİ", "BEST", "最佳", "सर्वश्रेष्ठ", "RÉCORD", "RECORD", "الأفضل", "সেরা", "RECORDE", "РЕКОРД", "بہترین"],
+  score: ["SKOR", "SCORE", "得分", "स्कोर", "PUNTOS", "SCORE", "النتيجة", "স্কোর", "PONTOS", "СЧЁТ", "اسکور"],
+  fell: ["Düştün!", "You fell!", "掉下去了！", "गिर गए!", "¡Te caíste!", "Chute !", "سقطت!", "পড়ে গেলে!", "Você caiu!", "Падение!", "گر گئے!"],
+  newBest: ["Yeni rekor!", "New record!", "新纪录！", "नया रिकॉर्ड!", "¡Nuevo récord!", "Nouveau record !", "رقم قياسي جديد!", "নতুন রেকর্ড!", "Novo recorde!", "Новый рекорд!", "نیا ریکارڈ!"],
+  adContinue: ["Reklam izle, devam et", "Watch an ad, keep going", "看广告继续", "विज्ञापन देखें, जारी रखें", "Mira un anuncio y sigue", "Regarde une pub et continue", "شاهد إعلانًا وتابع", "বিজ্ঞাপন দেখে চালিয়ে যাও", "Veja um anúncio e continue", "Реклама — и дальше", "اشتہار دیکھیں، جاری رکھیں"],
+  adUsed: ["Bu oyunda kullanıldı", "Already used this run", "本局已用过", "इस बार इस्तेमाल हो चुका", "Ya usado en esta partida", "Déjà utilisé cette partie", "استُخدم في هذه الجولة", "এই খেলায় ব্যবহার হয়ে গেছে", "Já usado nesta partida", "Уже использовано", "اس باری میں استعمال ہو چکا"],
+  heightM: ["Yükseklik: {0} metre", "Height: {0} meters", "高度：{0} 米", "ऊँचाई: {0} मीटर", "Altura: {0} metros", "Hauteur : {0} mètres", "الارتفاع: {0} متر", "উচ্চতা: {0} মিটার", "Altura: {0} metros", "Высота: {0} м", "اونچائی: {0} میٹر"],
+  bestM: ["En iyi: {0} metre", "Best: {0} meters", "最佳：{0} 米", "सर्वश्रेष्ठ: {0} मीटर", "Récord: {0} metros", "Record : {0} mètres", "الأفضل: {0} متر", "সেরা: {0} মিটার", "Recorde: {0} metros", "Рекорд: {0} м", "بہترین: {0} میٹر"],
+  scoreM: ["Skor: {0} metre", "Score: {0} meters", "得分：{0} 米", "स्कोर: {0} मीटर", "Puntos: {0} metros", "Score : {0} mètres", "النتيجة: {0} متر", "স্কোর: {0} মিটার", "Pontos: {0} metros", "Счёт: {0} м", "اسکور: {0} میٹر"]
+};
+/* ---------- Dil: ortak ayar localStorage "mappyLang" (3 sayfada aynı kod). Varsayılan: tarayıcı dili listedeyse o, yoksa İngilizce ---------- */
+var LANG_KEY = 'mappyLang';
+var LANG_NAMES = ['Türkçe', 'English', '中文', 'हिन्दी', 'Español', 'Français', 'العربية', 'বাংলা', 'Português', 'Русский', 'اردو'];
+var LANG_CODES = ['TR', 'EN', '中文', 'HI', 'ES', 'FR', 'AR', 'BN', 'PT', 'RU', 'UR'];
+/* ana yazı tipi (Baloo 2: Latin + Devanagari) bu yazıları kapsamaz: o dil seçiliyse uygun aile ayrıca yüklenir */
+var LANG_FONTS = { zh: 'Noto+Sans+SC:wght@700;800', ar: 'Baloo+Bhaijaan+2:wght@600;700;800', ur: 'Baloo+Bhaijaan+2:wght@600;700;800',
+                   bn: 'Baloo+Da+2:wght@600;700;800', ru: 'Nunito:wght@700;800' };
+function readLang() {
+  var s = null, list, i, l;
+  try { s = window.localStorage.getItem(LANG_KEY); } catch (e) {}
+  if (s && LANGS.indexOf(s) >= 0) return s;
+  list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || navigator.userLanguage || 'en'];
+  for (i = 0; i < list.length; i++) {
+    l = String(list[i] || '').toLowerCase().split(/[-_]/)[0];
+    if (LANGS.indexOf(l) >= 0) return l;
+  }
+  return 'en';
+}
+var LANG = 'en', LI = 1, RTL = false;
+function setLang(l) {
+  LANG = l; LI = LANGS.indexOf(l); RTL = l === 'ar' || l === 'ur';
+  document.documentElement.lang = l === 'zh' ? 'zh-Hans' : l;
+  loadLangFont(l);
+}
+function saveLang() { try { window.localStorage.setItem(LANG_KEY, LANG); } catch (e) {} }
+function loadLangFont(l) {
+  var f = LANG_FONTS[l], id = 'font-' + l;
+  if (!f || document.getElementById(id)) return;
+  var ln = document.createElement('link');
+  ln.id = id; ln.rel = 'stylesheet'; ln.href = 'https://fonts.googleapis.com/css2?family=' + f + '&display=swap';
+  document.head.appendChild(ln);
+}
+/* t('key', a, b) → çeviri; {0}, {1} yerine argümanlar. Eksikse İngilizce. */
+function t(k) {
+  var row = I18N[k], v, i;
+  if (!row) return k;
+  v = row[LI];
+  if (v == null || v === '') v = row[1];
+  for (i = 1; i < arguments.length; i++) v = v.split('{' + (i - 1) + '}').join(String(arguments[i]));
+  return v;
+}
+/* Arapça / Urduca: yalnızca yazı kaplarına dir="rtl" (oyun yerleşimi değişmez) */
+function textDir(el) { if (!el) return; if (RTL) el.setAttribute('dir', 'rtl'); else el.removeAttribute('dir'); }
+/* tek satırlık yazı sığmazsa yazı boyunu küçült (en çok %40) */
+function fitText(el) {
+  if (!el || !el.offsetParent) return;
+  el.style.fontSize = '';
+  var fs = parseFloat(window.getComputedStyle(el).fontSize), min = fs * 0.6, n = 0;
+  while (el.scrollWidth > el.clientWidth + 1 && fs > min && n++ < 24) { fs *= 0.93; el.style.fontSize = fs.toFixed(2) + 'px'; }
+}
+function fitAll(root, sel) { var l = (root || document).querySelectorAll(sel), i; for (i = 0; i < l.length; i++) fitText(l[i]); }
+setLang(readLang());
+/* geri/ileri ile önbellekten açılan sayfa başka dilde kaldıysa yenile */
+window.addEventListener('pageshow', function (e) { if (e.persisted && readLang() !== LANG) window.location.reload(); });
+/* @@I18N-END */
+
 /* =====================================================================
    MAPPY JUMP — sonsuz zıplama. Fare kendi zıplar, oyuncu yalnızca sola/sağa yön verir.
    Dünya birimi: ekran yüksekliği = 10 birim (1 birim = 1 m skor). Fizik sabit adımlı (1/120 sn).
@@ -197,41 +298,62 @@ var GRAV = 22;              /* yerçekimi, birim/sn² */
 var APEX = 3.15;            /* zıplama tepesi: ipin çizgisinin 3.15 birim üstü */
 var VX_MAX = 5.5, ACCEL = 32, TURN_MUL = 1.8, FRICTION = 20, VY_MIN = -16;
 var MOUSE_H = 1.3, MOUSE_W = MOUSE_H * 202 / 256, FOOT_HW = 0.2;
-var ROPE_H = 0.72;          /* ip resminin çizim yüksekliği (130 px) */
-var ROPE_S = ROPE_H / 130;  /* 1 kaynak px = ROPE_S birim */
+/* İp boyu: tüm ip resmi (uçlar dahil) aynı oranla ölçeklenir. Başlangıç boyu eskinin %90'ı
+   (2.0 × 0.72 → 1.8 × 0.648). Tırmandıkça her 19 m'de %1 küçülür; %50'ye (0.9 × 0.324) ancak 950 m'de iner.
+   Kalınlık en az 0.38 birim (görünür ve basılabilir kalsın). Çarpışma genişliği çizilen genişliği izler. */
+var ROPE_BASE_W = 1.8, ROPE_BASE_H = 0.648, ROPE_MIN_H = 0.38;
+var SIZE_STEP_M = 19, SIZE_STEP = 0.01, SIZE_MIN = 0.5;
+function sizeAt(y) { return Math.max(SIZE_MIN, 1 - SIZE_STEP * Math.floor(Math.max(0, y) / SIZE_STEP_M)); }
+function ropeWAt(y) { return ROPE_BASE_W * sizeAt(y); }
+function ropeHAt(y) { return Math.max(ROPE_MIN_H, ROPE_BASE_H * sizeAt(y)); }
 var ROPE_LINE_PX = 12;      /* ipin üst yüzeyi, kare içinde 12. px */
 var ROPE_CAP_PX = 24;       /* uç başlık genişliği (3 parçalı çizim) */
 var ROPE_FRAME_T = 0.11, ROPE_FRAMES = 12;
 var SAG_PX = [0, 16, 45, 73, 85, 64, 45, 30, 16, 7, 1, 0];   /* ortadaki çökme, kare başına (ip.webp'den ölçüldü) */
 var CONTACT_LAUNCH = 6 * ROPE_FRAME_T;  /* ipe değdikten 0.66 sn sonra (6. kare, ip yukarı yaylanırken) fırlar */
 var MOUSE_FRAME_T = 0.13;
-var START_W = 2.4;          /* ilk ip (başlangıç, hiç kopmaz) */
+var START_W = 2.16;         /* ilk ip (başlangıç, hiç kopmaz; eski 2.4'ün %90'ı) */
 var CAM_UNDER = 2.2;        /* kamera: son inilen ip ekranın altından 2.2 birim yukarıda */
 
-/* Renk basamakları: mavi → turkuaz → yeşil → sarı → turuncu → kırmızı */
-var ROPE_HUES = [null, 176, 122, 52, 28, 0];
+/* Renk basamakları: mavi → turkuaz → taze yeşil → güneş sarısı → kehribar turuncu → kırmızı.
+   [ton, ton yayılımı, doygunluk ×, açıklık ×, açıklık +, açıklık tavanı]; yalnızca mavi ip pikselleri boyanır. */
+var ROPE_TINT = [null,
+  [186, 0.30, 1.00, 1.00, 0.05, 0.90],
+  [118, 0.25, 0.92, 1.00, 0.05, 0.90],
+  [50,  0.12, 1.00, 1.15, 0.12, 0.93],
+  [32,  0.12, 1.00, 1.05, 0.07, 0.90],
+  [0,   0.40, 1.15, 0.95, 0.00, 0.90]];
 
 /* Zorluk bölgeleri (yüksekliğe göre). Sürekli değerler bir sonraki bölgeye doğru yumuşakça kayar,
    hak sayısı (budget) bölge sınırında basamakla düşer. Gökyüzü bölgeleri aynı sınırlarda değişir. */
 var ZONES = [
-  { h: 0,   budget: 5, gap: 2.20, w: 2.00, offMin: 0.6, offMax: 1.4, moveP: 0,    moveV: 0,   fragileP: 0 },
-  { h: 60,  budget: 4, gap: 2.35, w: 1.85, offMin: 0.9, offMax: 1.8, moveP: 0.15, moveV: 0.5, fragileP: 0 },
-  { h: 150, budget: 3, gap: 2.50, w: 1.70, offMin: 1.2, offMax: 2.2, moveP: 0.30, moveV: 0.7, fragileP: 0 },
-  { h: 270, budget: 2, gap: 2.60, w: 1.55, offMin: 1.4, offMax: 2.4, moveP: 0.45, moveV: 0.9, fragileP: 0 },
-  { h: 420, budget: 2, gap: 2.70, w: 1.40, offMin: 1.6, offMax: 2.6, moveP: 0.60, moveV: 1.1, fragileP: 0 },
-  { h: 600, budget: 2, gap: 2.75, w: 1.30, offMin: 1.7, offMax: 2.7, moveP: 0.70, moveV: 1.3, fragileP: 0.5 }
+  { h: 0,   budget: 5, gap: 2.20, offMin: 0.6, offMax: 1.4, moveP: 0,    moveV: 0,   fragileP: 0 },
+  { h: 60,  budget: 4, gap: 2.35, offMin: 0.9, offMax: 1.8, moveP: 0.15, moveV: 0.5, fragileP: 0 },
+  { h: 150, budget: 3, gap: 2.50, offMin: 1.2, offMax: 2.2, moveP: 0.30, moveV: 0.7, fragileP: 0 },
+  { h: 270, budget: 2, gap: 2.60, offMin: 1.4, offMax: 2.4, moveP: 0.45, moveV: 0.9, fragileP: 0 },
+  { h: 420, budget: 2, gap: 2.70, offMin: 1.7, offMax: 2.8, moveP: 0.60, moveV: 1.1, fragileP: 0 },
+  { h: 600, budget: 2, gap: 2.75, offMin: 1.9, offMax: 3.1, moveP: 0.70, moveV: 1.3, fragileP: 0.5 }
 ];
-var ZONE_END = 900;         /* son bölgenin değerleri buraya kadar hafifçe artmaz, sabit kalır */
-var REACH = 2.9;            /* bir sonraki ipe en kötü durumda gereken yatay yol (kenara iniş) ≤ 2.9 */
+/* son bölgede yan kayma 950 m'ye kadar artmaya devam eder (sonra sabit) */
+var TOP_H = 950, TOP_OFF_MIN = 2.2, TOP_OFF_MAX = 3.5;
+/* Ulaşılabilirlik: fırlayıştan bir sonraki ipin yüksekliğine düşene kadar geçen süre × en yüksek yan hız × %85.
+   En kötü durum: önceki ipin uzak ucundan (+ iki ipin kayma genlikleri) yeni ipin ortasına kadar olan yol bunu aşamaz. */
+var REACH_SAFETY = 0.85;
+function airTime(gap) { return Math.sqrt(2 * APEX / GRAV) + Math.sqrt(2 * Math.max(0, APEX - gap) / GRAV); }
+function reachAt(gap) { return REACH_SAFETY * VX_MAX * airTime(gap); }
 
 function zoneIndex(y) { var i = ZONES.length - 1; while (i > 0 && y < ZONES[i].h) i--; return i; }
 function lerp(a, b, t) { return a + (b - a) * t; }
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 function zoneAt(y) {
   var i = zoneIndex(y), a = ZONES[i], b = ZONES[i + 1], t;
-  if (!b) return a;
+  if (!b) {
+    t = clamp((y - a.h) / (TOP_H - a.h), 0, 1);
+    return { h: a.h, budget: a.budget, gap: a.gap, offMin: lerp(a.offMin, TOP_OFF_MIN, t), offMax: lerp(a.offMax, TOP_OFF_MAX, t),
+             moveP: a.moveP, moveV: a.moveV, fragileP: a.fragileP };
+  }
   t = clamp((y - a.h) / (b.h - a.h), 0, 1);
-  return { h: a.h, budget: a.budget, gap: lerp(a.gap, b.gap, t), w: lerp(a.w, b.w, t), offMin: lerp(a.offMin, b.offMin, t),
+  return { h: a.h, budget: a.budget, gap: lerp(a.gap, b.gap, t), offMin: lerp(a.offMin, b.offMin, t),
            offMax: lerp(a.offMax, b.offMax, t), moveP: lerp(a.moveP, b.moveP, t), moveV: lerp(a.moveV, b.moveV, t), fragileP: a.fragileP };
 }
 
@@ -259,7 +381,7 @@ function vibrate(ms) { try { if (P.vibe && navigator.vibrate) navigator.vibrate(
 /* Müzik: oyun akarken (zıplama başladıktan sonra) döngüde çalar. */
 var Music = {
   el: null, unlocked: false, held: false,
-  init: function () { try { this.el = new Audio('../muzik.mp3'); this.el.loop = true; this.el.volume = 0.35; this.el.preload = 'auto'; } catch (e) { this.el = null; } },
+  init: function () { try { this.el = new Audio('muzik-jump.mp3'); this.el.loop = true; this.el.volume = 0.35; this.el.preload = 'auto'; } catch (e) { this.el = null; } },
   sync: function () {
     var a = this.el;
     if (!a) return;
@@ -299,7 +421,8 @@ var IMG = { fare: new Image(), ip: new Image() };
 var ROPE_TINTS = [];        /* 6 tuval: renk basamağı başına ip sayfası */
 var imagesReady = false;
 
-function hueShiftSheet(src, hue) {
+function hueShiftSheet(src, tint) {
+  var hue = tint ? tint[0] : null;
   var c = document.createElement('canvas');
   c.width = src.naturalWidth || src.width; c.height = src.naturalHeight || src.height;
   var x = c.getContext('2d');
@@ -317,10 +440,9 @@ function hueShiftSheet(src, hue) {
       else if (mx === g) h = ((b - r) / dd + 2) * 60;
       else h = ((r - g) / dd + 4) * 60;
       if (h < 165 || h > 262 || s < 0.22) continue;           /* yalnızca mavi ip; altın başlıklar kalır */
-      h = hue + (h - 205) * 0.4;
-      if (hue === 52) { l = Math.min(0.92, l * 1.18 + 0.06); s = Math.min(1, s * 1.05); }   /* sarı açık olsun */
-      else if (hue === 0) { s = Math.min(1, s * 1.15); l = l * 0.95; }                     /* kırmızı net kırmızı */
-      else if (hue === 28) { l = Math.min(0.9, l * 1.08 + 0.03); }
+      h = hue + (h - 205) * tint[1];                           /* ipin burgu gölgeleri korunur (ton/açıklık farkı kalır) */
+      s = Math.min(1, s * tint[2]);
+      l = Math.min(tint[5], l * tint[3] + tint[4]);
       h = (h % 360 + 360) % 360 / 360;
       if (s === 0) { nr = ng = nb = l; }
       else {
@@ -355,7 +477,7 @@ var G = {
   time: 0, introT: 0, introDone: false, readyT: 0, deadT: 0,
   camY: -CAM_UNDER, camTarget: -CAM_UNDER,
   ropes: [], pieces: [], parts: [],
-  lastY: 0, lastX: 0, lastAmp: 0,
+  lastY: 0, lastX: 0, lastAmp: 0, lastW: START_W,
   score: 0, continued: false, newBest: false, bestAtStart: 0
 };
 var M = { x: 0, y: 0, vx: 0, vy: 0, contact: null, ct: 0, sagF: 1, lastRopeX: 0, face: 1, frame: 0, v0: 1 };
@@ -364,8 +486,8 @@ var overlayOpen = false, overlayDismiss = false;
 
 function rnd(a, b) { return a + Math.random() * (b - a); }
 
-function makeRope(x, y, w, budget, fragile) {
-  return { x: x, cx: x, y: y, w: w, budget: budget, hits: 0, color: 0, anim: -1, flash: 0,
+function makeRope(x, y, w, h, budget, fragile) {
+  return { x: x, cx: x, y: y, w: w, h: h, budget: budget, hits: 0, color: 0, anim: -1, flash: 0,
            amp: 0, spd: 0, ph: 0, fragile: !!fragile, snap: false };
 }
 
@@ -373,9 +495,9 @@ function resetWorld() {
   G.ropes = []; G.pieces = []; G.parts = [];
   G.camY = G.camTarget = -CAM_UNDER;
   G.score = 0; G.continued = false; G.newBest = false; G.bestAtStart = P.best;
-  var r0 = makeRope(colW / 2, 0, START_W, Infinity, false);
+  var r0 = makeRope(colW / 2, 0, START_W, ROPE_BASE_H, Infinity, false);
   G.ropes.push(r0);
-  G.lastY = 0; G.lastX = colW / 2; G.lastAmp = 0;
+  G.lastY = 0; G.lastX = colW / 2; G.lastAmp = 0; G.lastW = START_W;
   M.x = colW / 2; M.y = 0; M.vx = 0; M.vy = 0; M.contact = null; M.ct = 0; M.face = 1; M.frame = 0;
   JUMP_I = 0;
   genRopes();
@@ -388,15 +510,19 @@ function genRopes() {
   while (G.lastY < top) addRope();
 }
 function addRope() {
-  var y0 = G.lastY, z = zoneAt(y0 + 2.4), y = y0 + z.gap, w = z.w;
+  var y0 = G.lastY, z = zoneAt(y0 + 2.4), y = y0 + z.gap, w = ropeWAt(y), rh = ropeHAt(y);
   var lo = w / 2 + 0.1, hi = colW - w / 2 - 0.1, mag, dir, x, amp = 0, moving, budget, fragile, room;
   if (hi < lo) { lo = hi = colW / 2; }
   moving = Math.random() < z.moveP;
   if (moving) amp = rnd(0.45, 0.85);
   mag = rnd(z.offMin, z.offMax);
-  /* en kötü durum: önceki ipin kayması + bu ipin kayması + aradaki uzaklık − ipin yarısı ≤ REACH */
-  var lim = REACH + w / 2 - G.lastAmp - amp;
-  if (mag > lim) mag = Math.max(0.3, lim);
+  /* en kötü durum: önceki ipin uzak ucundan yeni ipin ortasına (iki ipin kayma genlikleri dahil) ≤ havada gidilebilen yol × %85 */
+  var reach = reachAt(y - y0), base = reach - G.lastW / 2 - G.lastAmp;
+  if (mag + amp > base && amp > 0) {          /* kayan ip: genlik en az 0.45 kalır, yan kayma kısalır */
+    amp = Math.min(amp, Math.max(0.45, base - mag));
+    if (base - amp < 0.3) { amp = Math.max(0, base - 0.3); if (amp < 0.25) amp = 0; }
+  }
+  if (mag + amp > base) mag = Math.max(0.3, base - amp);
   dir = Math.random() < 0.5 ? -1 : 1;
   x = G.lastX + dir * mag;
   if (x < lo || x > hi) { x = G.lastX - dir * mag; }
@@ -408,10 +534,10 @@ function addRope() {
   }
   fragile = Math.random() < z.fragileP;
   budget = fragile ? 1 : ZONES[zoneIndex(y)].budget;
-  var r = makeRope(x, y, w, budget, fragile);
+  var r = makeRope(x, y, w, rh, budget, fragile);
   if (amp > 0) { r.amp = amp; r.spd = z.moveV / amp; r.ph = rnd(0, Math.PI * 2); r.x = x + amp * Math.sin(r.ph + G.time * r.spd); }
   G.ropes.push(r);
-  G.lastY = y; G.lastX = x; G.lastAmp = amp;
+  G.lastY = y; G.lastX = x; G.lastAmp = amp; G.lastW = w;
 }
 
 /* =====================================================================
@@ -458,10 +584,10 @@ window.addEventListener('blur', function () { KEY_L = KEY_R = false; PTR = {}; }
 /* =====================================================================
    FİZİK (sabit adım)
    ===================================================================== */
-function sagAt(t) {
+function sagAt(t, rh) {
   var f = t / ROPE_FRAME_T, i = Math.floor(f), fr = f - i;
   if (i >= ROPE_FRAMES - 1) return 0;
-  return lerp(SAG_PX[i], SAG_PX[i + 1], fr) * ROPE_S;
+  return lerp(SAG_PX[i], SAG_PX[i + 1], fr) * rh / 130;
 }
 
 function step(dt) {
@@ -497,7 +623,7 @@ function step(dt) {
       r = M.contact;
       M.ct += dt;
       M.x += r.x - M.lastRopeX; M.lastRopeX = r.x;
-      M.y = r.y - sagAt(M.ct) * M.sagF;
+      M.y = r.y - sagAt(M.ct, r.h) * M.sagF;
       if (M.ct >= CONTACT_LAUNCH) launch();
     } else {
       M.x += M.vx * dt;
@@ -511,7 +637,7 @@ function step(dt) {
       if (M.vy < 0 && G.state === 'play') {
         for (i = 0; i < ropes.length; i++) {
           r = ropes[i];
-          if (prevY >= r.y && M.y < r.y && Math.abs(M.x - r.x) <= r.w / 2 - 0.08 + FOOT_HW) { land(r); break; }
+          if (prevY >= r.y && M.y < r.y && Math.abs(M.x - r.x) <= r.w * 0.46 + FOOT_HW) { land(r); break; }
         }
       }
     }
@@ -579,8 +705,8 @@ function breakRope(r) {
   if (i >= 0) G.ropes.splice(i, 1);
   if (M.contact === r) M.contact = null;
   var fr = r.anim >= 0 ? Math.min(ROPE_FRAMES - 1, Math.floor(r.anim / ROPE_FRAME_T)) : 0;
-  G.pieces.push({ side: -1, x: r.x - r.w / 4, y: r.y, w: r.w / 2, vx: -0.8, vy: 1.2, rot: 0, vr: -2.2, life: 0.9, max: 0.9, color: r.color, frame: fr });
-  G.pieces.push({ side: 1, x: r.x + r.w / 4, y: r.y, w: r.w / 2, vx: 0.8, vy: 1.2, rot: 0, vr: 2.2, life: 0.9, max: 0.9, color: r.color, frame: fr });
+  G.pieces.push({ side: -1, x: r.x - r.w / 4, y: r.y, w: r.w / 2, h: r.h, vx: -0.8, vy: 1.2, rot: 0, vr: -2.2, life: 0.9, max: 0.9, color: r.color, frame: fr });
+  G.pieces.push({ side: 1, x: r.x + r.w / 4, y: r.y, w: r.w / 2, h: r.h, vx: 0.8, vy: 1.2, rot: 0, vr: 2.2, life: 0.9, max: 0.9, color: r.color, frame: fr });
   burst(r.x, r.y, REDUCED ? 4 : 16, colorCss(r.color), 1);
   vibrate(80);
   playSound('tap', 0.55);
@@ -604,7 +730,7 @@ function stepFx(dt) {
     if (p.life <= 0) G.parts.splice(i, 1);
   }
 }
-var ROPE_CSS = ['#2f8fe8', '#1fb8b0', '#3cbf4a', '#f2cf2a', '#f5892a', '#e8333a'];
+var ROPE_CSS = ['#2f8fe8', '#25c6e0', '#3cc54a', '#ffd83a', '#ff9a1f', '#e8333a'];
 function colorCss(c) { return ROPE_CSS[clamp(c, 0, 5)]; }
 
 /* =====================================================================
@@ -628,6 +754,7 @@ function resize() {
   }
   var u = Math.max(Math.min(w / 390, h / 844), Math.min(1, w / 360));
   document.documentElement.style.setProperty('--u', u.toFixed(4) + 'px');
+  if (overlayOpen) fitCard();
 }
 function sx(x) { return COL_L + x * K; }
 function sy(y) { return VH - (y - G.camY) * K; }
@@ -708,7 +835,7 @@ function drawCloud(x, y, s, a) {
   ctx.fill();
 }
 
-/* ---- ip: 3 parçalı çizim (uçlar sabit, orta uzar/kısalır), kalınlık hep aynı ---- */
+/* ---- ip: 3 parçalı çizim (uçlar kalınlıkla orantılı, orta uzar/kısalır); kalınlık ipin r.h'si ---- */
 function ropeFrame(r) { return r.anim >= 0 ? Math.min(ROPE_FRAMES - 1, Math.floor(r.anim / ROPE_FRAME_T)) : 0; }
 function drawRopeImg(sheet, fr, left, top, w, h, part) {
   var sxp = (fr % 6) * 360, syp = Math.floor(fr / 6) * 130, cap = ROPE_CAP_PX * h / 130;
@@ -719,7 +846,7 @@ function drawRopeImg(sheet, fr, left, top, w, h, part) {
   ctx.drawImage(sheet, sxp + 360 - ROPE_CAP_PX, syp, ROPE_CAP_PX, 130, left + w - cap, top, cap, h);
 }
 function drawRope(r) {
-  var h = ROPE_H * K, w = r.w * K, left = sx(r.x - r.w / 2), top = sy(r.y) - ROPE_LINE_PX * ROPE_S * K, fr = ropeFrame(r);
+  var h = r.h * K, w = r.w * K, left = sx(r.x - r.w / 2), top = sy(r.y) - ROPE_LINE_PX * r.h / 130 * K, fr = ropeFrame(r);
   var sheet = ROPE_TINTS[r.color] || ROPE_TINTS[0];
   if (top > VH + 4 || top + h < -4) return;
   drawRopeImg(sheet, fr, left, top, w, h);
@@ -733,12 +860,12 @@ function drawRope(r) {
 }
 function drawPieces() {
   for (var i = 0; i < G.pieces.length; i++) {
-    var p = G.pieces[i], h = ROPE_H * K, w = p.w * K;
+    var p = G.pieces[i], h = p.h * K, w = p.w * K;
     ctx.save();
     ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
     ctx.translate(sx(p.x), sy(p.y));
     ctx.rotate(p.rot);
-    drawRopeImg(ROPE_TINTS[p.color] || ROPE_TINTS[0], p.frame, -w / 2, -ROPE_LINE_PX * ROPE_S * K, w, h, p.side < 0 ? 'L' : 'R');
+    drawRopeImg(ROPE_TINTS[p.color] || ROPE_TINTS[0], p.frame, -w / 2, -ROPE_LINE_PX * p.h / 130 * K, w, h, p.side < 0 ? 'L' : 'R');
     ctx.restore();
   }
   for (i = 0; i < G.parts.length; i++) {
@@ -815,8 +942,8 @@ function setDigits(el, n, label) {
 }
 function updateScore() {
   if (G.score > P.best) { P.best = G.score; G.newBest = true; }
-  setDigits($('scoreNum'), G.score, 'Yükseklik: ' + G.score + ' metre');
-  setDigits($('bestNum'), P.best, 'En iyi: ' + P.best + ' metre');
+  setDigits($('scoreNum'), G.score, t('heightM', G.score));
+  setDigits($('bestNum'), P.best, t('bestM', P.best));
 }
 
 /* =====================================================================
@@ -825,11 +952,11 @@ function updateScore() {
 var AD_SIM_MS = 2000, AD_EVERY = 3, AD_MIN_MS = 3 * 60 * 1000, AD_FIRST_RUNS = 2;
 var SimAdProvider = {
   show: function (title, cb) {
-    openOverlay('<h2 id="ovTitle">Reklam</h2><p>' + title + '</p><div class="ad-bar" aria-hidden="true"><i></i></div>', false);
+    openOverlay('<h2 id="ovTitle">' + t('ad') + '</h2><p>' + title + '</p><div class="ad-bar" aria-hidden="true"><i></i></div>', false);
     setTimeout(cb, AD_SIM_MS);
   },
-  showRewarded: function (cb, failCb) { SimAdProvider.show('Ödülün birazdan geliyor…', cb); },
-  showInterstitial: function (cb) { SimAdProvider.show('Birazdan devam ediyoruz…', cb); },
+  showRewarded: function (cb, failCb) { SimAdProvider.show(t('adReward'), cb); },
+  showInterstitial: function (cb) { SimAdProvider.show(t('adSoon'), cb); },
   showBanner: function () {},
   hideBanner: function () {}
 };
@@ -870,14 +997,18 @@ function openOverlay(html, dismissible, cls) {
   var card = $('card');
   card.className = 'card' + (cls ? ' ' + cls : '');
   card.innerHTML = html;
+  textDir(card);
   $('overlay').hidden = false;
   overlayOpen = true; overlayDismiss = !!dismissible;
+  fitCard();
   $('hud').inert = true;
   PTR = {}; KEY_L = KEY_R = false;
   Intro.pause();
   Music.sync();
   card.focus();
 }
+/* uzun çeviriler tek satıra sığsın */
+function fitCard() { fitAll($('card'), 'h2, .row-btn .cap, .acts.pair button'); }
 function closeOverlay() {
   $('overlay').hidden = true;
   $('card').innerHTML = '';
@@ -888,19 +1019,19 @@ function closeOverlay() {
 }
 function showPause() {
   if (overlayOpen || G.state === 'tap' || G.state === 'over' || G.state === 'dead') return;
-  openOverlay('<h2 id="ovTitle">Duraklatıldı</h2><div class="row-list">' +
-    rowButton('close', '../ik-oynat.webp', 'Devam et') +
-    rowButton('restart', '../ik-yeniden.webp', 'Yeniden başla') +
-    rowButton('home', '../ik-ev.webp', 'Ana sayfa') + '</div>', true, 'menu');
+  openOverlay('<h2 id="ovTitle">' + t('paused') + '</h2><div class="row-list">' +
+    rowButton('close', '../ik-oynat.webp', t('resume')) +
+    rowButton('restart', '../ik-yeniden.webp', t('restartRun')) +
+    rowButton('home', '../ik-ev.webp', t('home')) + '</div>', true, 'menu');
 }
-var TOGGLES = { music: ['Müzik', '../ik-muzik'], sfx: ['Ses', '../ik-ses'], vibe: ['Titreşim', '../ik-titresim'] };
+var TOGGLES = { music: ['music', '../ik-muzik'], sfx: ['sound', '../ik-ses'], vibe: ['vibe', '../ik-titresim'] };
 function toggleSrc(k) { return TOGGLES[k][1] + (P[k] ? '' : '-kapali') + '.webp'; }
 function showSettings() {
   if (overlayOpen || G.state === 'over' || G.state === 'dead') return;
-  var html = '<h2 id="ovTitle">Ayarlar</h2><div class="row-list">', k;
+  var html = '<h2 id="ovTitle">' + t('settings') + '</h2><div class="row-list">', k;
   for (k in TOGGLES) if (TOGGLES.hasOwnProperty(k))
-    html += rowButton('toggle', toggleSrc(k), TOGGLES[k][0], ' data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') + '"', P[k] ? 'Açık' : 'Kapalı');
-  html += rowButton('close', '../ik-kapat.webp', 'Kapat') + '</div>';
+    html += rowButton('toggle', toggleSrc(k), t(TOGGLES[k][0]), ' data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') + '"', P[k] ? t('on') : t('off'));
+  html += rowButton('close', '../ik-kapat.webp', t('close')) + '</div>';
   openOverlay(html, true, 'menu');
 }
 var SPARKLES = '<img class="sparkle s1" src="../ui-parilti.webp" width="87" height="96" alt="">' +
@@ -914,24 +1045,29 @@ function gameOver() {
 }
 function showGameOver() {
   var nb = G.newBest && G.score > G.bestAtStart && G.score > 0;
-  var ad = '';
+  /* ödüllü devam her oyunda 1 kez; kullanıldıysa gizlenmez, soluk + kısa not */
+  var ad;
   if (!G.continued) {
     Ads.offered('devam');
-    ad = '<button class="ad-btn" type="button" data-act="adContinue" aria-label="Reklam izle, devam et">' +
-         '<img src="../ik-reklam.webp" width="162" height="160" alt=""><span class="cap">Reklam izle, devam et</span></button>';
+    ad = '<button class="ad-btn" type="button" data-act="adContinue" aria-label="' + t('adContinue') + '">' +
+         '<img src="../ik-reklam.webp" width="162" height="160" alt=""><span class="cap">' + t('adContinue') + '</span></button>';
+  } else {
+    ad = '<button class="ad-btn" type="button" disabled aria-label="' + t('adContinue') + ' — ' + t('adUsed') + '">' +
+         '<img src="../ik-reklam.webp" width="162" height="160" alt=""><span class="cap">' + t('adContinue') + '</span>' +
+         '<span class="note">' + t('adUsed') + '</span></button>';
   }
   openOverlay((nb ? SPARKLES : '') +
-    '<h2 id="ovTitle">Düştün!</h2>' +
-    (nb ? '<div style="text-align:center"><span class="new-best">Yeni rekor!</span></div>' : '') +
-    '<div class="go-stats"><div class="go-stat"><span class="k">SKOR</span>' + digitsHTML(G.score, 'Skor: ' + G.score + ' metre') + '</div>' +
-    '<div class="go-stat small"><span class="k">EN İYİ</span>' + digitsHTML(P.best, 'En iyi: ' + P.best + ' metre') + '</div></div>' +
+    '<h2 id="ovTitle">' + t('fell') + '</h2>' +
+    (nb ? '<div style="text-align:center"><span class="new-best">' + t('newBest') + '</span></div>' : '') +
+    '<div class="go-stats"><div class="go-stat"><span class="k">' + t('score') + '</span>' + digitsHTML(G.score, t('scoreM', G.score)) + '</div>' +
+    '<div class="go-stat small"><span class="k">' + t('best') + '</span>' + digitsHTML(P.best, t('bestM', P.best)) + '</div></div>' +
     ad +
-    '<div class="acts pair"><button class="txt-btn" type="button" data-act="home">Ana sayfa</button>' +
-    '<button class="main-btn" type="button" data-act="again">Tekrar oyna</button></div>', false, 'menu');
+    '<div class="acts pair"><button class="txt-btn" type="button" data-act="home">' + t('home') + '</button>' +
+    '<button class="main-btn" type="button" data-act="again">' + t('playAgain') + '</button></div>', false, 'menu');
 }
 function showAdFail() {
-  openOverlay('<h2 id="ovTitle">Reklam şu an yok</h2><p>Biraz sonra tekrar dene.</p>' +
-    '<div class="acts"><button class="txt-btn" type="button" data-act="backToOver">Tamam</button></div>', false);
+  openOverlay('<h2 id="ovTitle">' + t('noAd') + '</h2><p>' + t('tryLater') + '</p>' +
+    '<div class="acts"><button class="txt-btn" type="button" data-act="backToOver">' + t('ok') + '</button></div>', false);
 }
 
 /* ödüllü devam: kameranın hemen altına (ekranın alt kısmına) taze bir ip, fare üstünde */
@@ -947,9 +1083,9 @@ function respawn() {
   if (y > G.camY + 3) y = G.camY + 1.6;
   /* yeni ipin çevresindeki eski ipleri kaldır */
   for (i = G.ropes.length - 1; i >= 0; i--) if (G.ropes[i].y <= y + 0.8) G.ropes.splice(i, 1);
-  var w = Math.max(1.8, z.w);
+  var w = Math.max(1.62, ropeWAt(y));
   x = above ? clamp(above.cx + (above.cx > colW / 2 ? -1 : 1) * Math.min(1.0, z.offMin), w / 2 + 0.1, colW - w / 2 - 0.1) : colW / 2;
-  var nr = makeRope(x, y, w, Math.max(2, ZONES[zoneIndex(y)].budget), false);
+  var nr = makeRope(x, y, w, ropeHAt(y), Math.max(2, ZONES[zoneIndex(y)].budget), false);
   G.ropes.push(nr);
   M.x = x; M.y = y; M.vx = 0; M.vy = 0; M.contact = nr; M.ct = 0; M.lastRopeX = x;
   G.camTarget = Math.max(G.camY, G.camTarget);
@@ -980,7 +1116,7 @@ var ACTIONS = {
     P[k] = !P[k]; save();
     btn.setAttribute('aria-pressed', P[k] ? 'true' : 'false');
     btn.querySelector('img').setAttribute('src', toggleSrc(k));
-    var st = btn.querySelector('.st'); if (st) st.textContent = P[k] ? 'Açık' : 'Kapalı';
+    var st = btn.querySelector('.st'); if (st) st.textContent = P[k] ? t('on') : t('off');
     if (k === 'music') Music.sync();
     if (k === 'sfx' && !P.sfx && G.state === 'intro') { Intro.stop(); G.introDone = true; }
     if (k === 'vibe' && P.vibe) vibrate(40);
@@ -1029,6 +1165,22 @@ $('fs').addEventListener('click', function () {
   } catch (e) {}
 });
 
+/* sayfadaki sabit yazılar (HTML'deki Türkçe yedeklerin yerine seçili dil) */
+function applyTexts() {
+  $('game').setAttribute('aria-label', t('jumpArea'));
+  $('settings').setAttribute('aria-label', t('settings'));
+  $('pause').setAttribute('aria-label', t('pause'));
+  $('fs').setAttribute('aria-label', t('fullscreen'));
+  $('btnL').setAttribute('aria-label', t('left'));
+  $('btnR').setAttribute('aria-label', t('right'));
+  $('bestK').textContent = t('best');
+  $('tapStart').setAttribute('aria-label', t('tapStart'));
+  $('tapText').textContent = t('tapStart');
+  textDir($('tapText'));
+}
+applyTexts();
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', function () { if (overlayOpen) fitCard(); });
+
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', function () { setTimeout(resize, 80); });
 document.addEventListener('fullscreenchange', function () { setTimeout(resize, 60); });
@@ -1042,7 +1194,7 @@ document.addEventListener('fullscreenchange', function () { setTimeout(resize, 6
   var left = 2;
   function one() {
     if (--left > 0) return;
-    for (var i = 0; i < ROPE_HUES.length; i++) ROPE_TINTS.push(hueShiftSheet(IMG.ip, ROPE_HUES[i]));
+    for (var i = 0; i < ROPE_TINT.length; i++) ROPE_TINTS.push(hueShiftSheet(IMG.ip, ROPE_TINT[i]));
     imagesReady = true;
   }
   IMG.fare.onload = IMG.fare.onerror = one;

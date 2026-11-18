@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mappy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --u:max(min(100vw / 390, 100vh / 844), min(1px, 100vw / 360));
@@ -11,7 +14,7 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
-body{background:var(--soft);font-family:"Baloo 2","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;
+body{background:var(--soft);font-family:"Baloo 2","Nunito","Baloo Bhaijaan 2","Baloo Da 2","Noto Sans SC","Arial Rounded MT Bold",system-ui,"Noto Sans","Noto Sans Devanagari","Noto Sans Bengali","Noto Naskh Arabic","Noto Nastaliq Urdu","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
   -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 img{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
 button{font:inherit;cursor:pointer;touch-action:manipulation}
@@ -44,8 +47,25 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}
 #fs{right:calc(12*var(--u) + env(safe-area-inset-right,0px));bottom:calc(14*var(--u) + env(safe-area-inset-bottom,0px))}
 #mus{left:calc(12*var(--u) + env(safe-area-inset-left,0px));bottom:calc(14*var(--u) + env(safe-area-inset-bottom,0px))}
 
+/* dil tuşu: ayırıcı çubuktaki yıldız rozetinin tam üstünde (yeri JS'te resmin ölçeğiyle hesaplanır) */
+.lang-btn{position:fixed;z-index:4;border:0;padding:0;margin:0;background:none;line-height:0;opacity:0;pointer-events:none;
+  transition:opacity .4s,transform .1s;touch-action:manipulation}
+.ready .lang-btn{opacity:1;pointer-events:auto}
+.lang-btn img{display:block;width:100%;height:100%;filter:drop-shadow(0 2px 4px rgba(30,20,60,.35))}
+.lang-btn span{position:absolute;left:0;right:0;top:46%;transform:translateY(-50%);text-align:center;line-height:1;
+  font-weight:800;color:#3a2a1a;white-space:nowrap}
+.lang-btn:active{transform:scale(.92)}
+.lang-btn:focus-visible{outline:calc(3*var(--u)) solid #fff;outline-offset:calc(2*var(--u));border-radius:22%}
+/* dil değişince: üstte küçük beyaz kart, dilin kendi adıyla */
+.toast{position:fixed;z-index:6;left:50%;top:calc(18*var(--u) + env(safe-area-inset-top,0px));transform:translate(-50%,calc(-8*var(--u)));
+  min-width:calc(120*var(--u));max-width:80vw;padding:calc(10*var(--u)) calc(22*var(--u)) calc(8*var(--u));border-radius:calc(16*var(--u));
+  background:#fff;color:#3a2a5e;font-size:calc(20*var(--u));font-weight:800;line-height:1.2;text-align:center;white-space:nowrap;
+  box-shadow:0 calc(3*var(--u)) 0 #e2d8ec,0 calc(6*var(--u)) calc(16*var(--u)) rgba(58,42,94,.18);
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
 @media (prefers-reduced-motion:reduce){
-  .half img,.bg,.ghost,.ui-btn,.bar{transition:none}
+  .half img,.bg,.ghost,.ui-btn,.bar,.lang-btn,.toast{transition:none}
 }
 </style>
 </head>
@@ -59,8 +79,76 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}
 <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
 <button class="ui-btn" type="button" id="mus" aria-label="Müzik" aria-pressed="true"><img src="ik-muzik.webp" width="129" height="128" alt=""></button>
 <button class="ui-btn" type="button" id="fs" aria-label="Tam ekran"><img src="ui-fullscreen.webp" width="129" height="128" alt=""></button>
+<button class="lang-btn" type="button" id="lang" aria-label="Dil"><img src="ik-bolum-kare.webp" width="176" height="160" alt=""><span id="langCode" aria-hidden="true"></span></button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+/* @@I18N-BEGIN — çeviriler (sıra: tr en zh hi es fr ar bn pt ru ur); doğrudan burada düzenlenebilir (yerel üretici: /home/claude/tools/i18n_gen.py) */
+var LANGS = ["tr", "en", "zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur"];
+var I18N = {
+  playPuzzle: ["Mappy Puzzle'ı oyna", "Play Mappy Puzzle", "玩 Mappy Puzzle", "Mappy Puzzle खेलें", "Jugar a Mappy Puzzle", "Jouer à Mappy Puzzle", "العب Mappy Puzzle", "Mappy Puzzle খেলো", "Jogar Mappy Puzzle", "Играть в Mappy Puzzle", "Mappy Puzzle کھیلیں"],
+  playJump: ["Mappy Jump'ı oyna", "Play Mappy Jump", "玩 Mappy Jump", "Mappy Jump खेलें", "Jugar a Mappy Jump", "Jouer à Mappy Jump", "العب Mappy Jump", "Mappy Jump খেলো", "Jogar Mappy Jump", "Играть в Mappy Jump", "Mappy Jump کھیلیں"],
+  musicOn: ["Müzik açık", "Music on", "音乐：开", "संगीत चालू", "Música: sí", "Musique : oui", "الموسيقى: تشغيل", "সংগীত চালু", "Música: sim", "Музыка: вкл", "موسیقی آن"],
+  musicOff: ["Müzik kapalı", "Music off", "音乐：关", "संगीत बंद", "Música: no", "Musique : non", "الموسيقى: إيقاف", "সংগীত বন্ধ", "Música: não", "Музыка: выкл", "موسیقی آف"],
+  fullscreen: ["Tam ekran", "Full screen", "全屏", "फ़ुल स्क्रीन", "Pantalla completa", "Plein écran", "ملء الشاشة", "পূর্ণ স্ক্রিন", "Tela cheia", "Полный экран", "پوری اسکرین"],
+  langBtn: ["Dil: {0}. Değiştirmek için dokun", "Language: {0}. Tap to change", "语言：{0}。点击切换", "भाषा: {0}। बदलने के लिए टैप करें", "Idioma: {0}. Toca para cambiar", "Langue : {0}. Touche pour changer", "اللغة: {0}. انقر للتغيير", "ভাষা: {0}। বদলাতে ট্যাপ করো", "Idioma: {0}. Toque para mudar", "Язык: {0}. Нажми, чтобы сменить", "زبان: {0}۔ بدلنے کے لیے ٹیپ کریں"]
+};
+/* ---------- Dil: ortak ayar localStorage "mappyLang" (3 sayfada aynı kod). Varsayılan: tarayıcı dili listedeyse o, yoksa İngilizce ---------- */
+var LANG_KEY = 'mappyLang';
+var LANG_NAMES = ['Türkçe', 'English', '中文', 'हिन्दी', 'Español', 'Français', 'العربية', 'বাংলা', 'Português', 'Русский', 'اردو'];
+var LANG_CODES = ['TR', 'EN', '中文', 'HI', 'ES', 'FR', 'AR', 'BN', 'PT', 'RU', 'UR'];
+/* ana yazı tipi (Baloo 2: Latin + Devanagari) bu yazıları kapsamaz: o dil seçiliyse uygun aile ayrıca yüklenir */
+var LANG_FONTS = { zh: 'Noto+Sans+SC:wght@700;800', ar: 'Baloo+Bhaijaan+2:wght@600;700;800', ur: 'Baloo+Bhaijaan+2:wght@600;700;800',
+                   bn: 'Baloo+Da+2:wght@600;700;800', ru: 'Nunito:wght@700;800' };
+function readLang() {
+  var s = null, list, i, l;
+  try { s = window.localStorage.getItem(LANG_KEY); } catch (e) {}
+  if (s && LANGS.indexOf(s) >= 0) return s;
+  list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || navigator.userLanguage || 'en'];
+  for (i = 0; i < list.length; i++) {
+    l = String(list[i] || '').toLowerCase().split(/[-_]/)[0];
+    if (LANGS.indexOf(l) >= 0) return l;
+  }
+  return 'en';
+}
+var LANG = 'en', LI = 1, RTL = false;
+function setLang(l) {
+  LANG = l; LI = LANGS.indexOf(l); RTL = l === 'ar' || l === 'ur';
+  document.documentElement.lang = l === 'zh' ? 'zh-Hans' : l;
+  loadLangFont(l);
+}
+function saveLang() { try { window.localStorage.setItem(LANG_KEY, LANG); } catch (e) {} }
+function loadLangFont(l) {
+  var f = LANG_FONTS[l], id = 'font-' + l;
+  if (!f || document.getElementById(id)) return;
+  var ln = document.createElement('link');
+  ln.id = id; ln.rel = 'stylesheet'; ln.href = 'https://fonts.googleapis.com/css2?family=' + f + '&display=swap';
+  document.head.appendChild(ln);
+}
+/* t('key', a, b) → çeviri; {0}, {1} yerine argümanlar. Eksikse İngilizce. */
+function t(k) {
+  var row = I18N[k], v, i;
+  if (!row) return k;
+  v = row[LI];
+  if (v == null || v === '') v = row[1];
+  for (i = 1; i < arguments.length; i++) v = v.split('{' + (i - 1) + '}').join(String(arguments[i]));
+  return v;
+}
+/* Arapça / Urduca: yalnızca yazı kaplarına dir="rtl" (oyun yerleşimi değişmez) */
+function textDir(el) { if (!el) return; if (RTL) el.setAttribute('dir', 'rtl'); else el.removeAttribute('dir'); }
+/* tek satırlık yazı sığmazsa yazı boyunu küçült (en çok %40) */
+function fitText(el) {
+  if (!el || !el.offsetParent) return;
+  el.style.fontSize = '';
+  var fs = parseFloat(window.getComputedStyle(el).fontSize), min = fs * 0.6, n = 0;
+  while (el.scrollWidth > el.clientWidth + 1 && fs > min && n++ < 24) { fs *= 0.93; el.style.fontSize = fs.toFixed(2) + 'px'; }
+}
+function fitAll(root, sel) { var l = (root || document).querySelectorAll(sel), i; for (i = 0; i < l.length; i++) fitText(l[i]); }
+setLang(readLang());
+/* geri/ileri ile önbellekten açılan sayfa başka dilde kaldıysa yenile */
+window.addEventListener('pageshow', function (e) { if (e.persisted && readLang() !== LANG) window.location.reload(); });
+/* @@I18N-END */
+
 /* =====================================================================
    MAPPY — açılış: yükleme ekranı (resim soldan sağa açılır) + ana menü (üst yarı Puzzle, alt yarı Jump)
    ===================================================================== */
@@ -68,6 +156,7 @@ function $(id) { return document.getElementById(id); }
 var IMG_W = 941, IMG_H = 1672, SPLIT_Y = 867;     /* mavi/altın ayırıcı çubuk ~845–890 px, ortası 867 */
 var MIN_LOAD_MS = 1200;
 var SAFE_X = 22;                                   /* "Mappy Jump" logosu sağda x≈916'ya kadar uzanıyor */
+var BADGE_X = 471, BADGE_Y = 865, BADGE_W = 130;   /* ayırıcıdaki yıldız rozeti (kalkan ~412–532 × 807–925) → dil tuşu */
 
 /* ---------- ayar (launcher'a ait) ---------- */
 var SAVE_KEY = 'mappyMenu.v1', S = { music: true };
@@ -89,6 +178,11 @@ function layout() {
   split = Math.max(1, Math.min(h - 1, split));
   place($('hTop'), 0, split, w);
   place($('hBot'), split, h - split, w);
+  /* dil tuşu: rozetin merkezine, rozet genişliğinde (resmin ölçeğiyle) */
+  var lb = $('lang'), lw = BADGE_W * sc, lh = lw * 160 / 176;
+  lb.style.width = lw + 'px'; lb.style.height = lh + 'px';
+  lb.style.left = (rect.x + BADGE_X * sc - lw / 2) + 'px'; lb.style.top = (rect.y + BADGE_Y * sc - lh / 2) + 'px';
+  $('langCode').style.fontSize = (lw * 0.3).toFixed(1) + 'px';
   var g = $('ghost');
   g.style.left = rect.x + 'px'; g.style.top = rect.y + 'px'; g.style.width = rect.w + 'px'; g.style.height = rect.h + 'px';
 }
@@ -117,7 +211,7 @@ var ASSETS = (function () {
          'ik-muzik.webp', 'ik-muzik-kapali.webp', 'ik-ses.webp', 'ik-ses-kapali.webp', 'ik-titresim.webp', 'ik-titresim-kapali.webp',
          'jump/fare.webp', 'jump/ip.webp',
          'muzik.mp3', 'pop-1.mp3', 'ses-fare.mp3',
-         'jump/baslangic.mp3', 'jump/ziplama-1.mp3', 'jump/ziplama-2.mp3', 'jump/ziplama-3.mp3');
+         'jump/baslangic.mp3', 'jump/muzik-jump.mp3', 'jump/ziplama-1.mp3', 'jump/ziplama-2.mp3', 'jump/ziplama-3.mp3');
   return l;
 })();
 var total = ASSETS.length + 1, done = 0, menuReady = false, t0 = Date.now(), shown = 0, finished = false;
@@ -225,11 +319,46 @@ Music.init();
 function syncMusBtn() {
   var b = $('mus');
   b.setAttribute('aria-pressed', S.music ? 'true' : 'false');
-  b.setAttribute('aria-label', S.music ? 'Müzik açık' : 'Müzik kapalı');
+  b.setAttribute('aria-label', S.music ? t('musicOn') : t('musicOff'));
   b.querySelector('img').src = S.music ? 'ik-muzik.webp' : 'ik-muzik-kapali.webp';
 }
 $('mus').addEventListener('click', function () { S.music = !S.music; save(); syncMusBtn(); Music.unlocked = true; Music.sync(); });
 syncMusBtn();
+
+/* ---------- dil: her dokunuş listedeki sonraki dile geçer (ortak ayar mappyLang) ---------- */
+function applyTexts() {
+  $('hTop').setAttribute('aria-label', t('playPuzzle'));
+  $('hBot').setAttribute('aria-label', t('playJump'));
+  $('fs').setAttribute('aria-label', t('fullscreen'));
+  $('lang').setAttribute('aria-label', t('langBtn', LANG_NAMES[LI]));
+  $('langCode').textContent = LANG_CODES[LI];
+  syncMusBtn();
+}
+var toastT = 0;
+function toast(text) {
+  var el = $('toast');
+  el.textContent = text;
+  textDir(el);
+  el.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(function () { el.classList.remove('on'); }, 1400);
+}
+(function () {
+  var b = $('lang');
+  /* alttaki yarım ekran oyun bağlantılarını tetiklemesin */
+  function stop(e) { e.stopPropagation(); }
+  b.addEventListener('pointerdown', stop);
+  b.addEventListener('pointerup', stop);
+  b.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    if (!finished) return;
+    setLang(LANGS[(LI + 1) % LANGS.length]);
+    saveLang();
+    applyTexts();
+    toast(LANG_NAMES[LI]);
+  });
+})();
+applyTexts();
 
 /* ---------- tam ekran (dikey kalır) ---------- */
 $('fs').addEventListener('click', function () {
