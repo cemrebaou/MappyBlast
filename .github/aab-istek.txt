@@ -1,1 +1,1 @@
-AAB isteği: 2026-11-18T14:22:50Z — yeniden dene
+AAB isteği: 2026-11-18T14:31:31Z — screen.portrait required=false
