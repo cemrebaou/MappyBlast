@@ -3,6 +3,10 @@ name: Android AAB
 on:
   # sadece elle: Actions > Android AAB > Run workflow (kullanici 'tamam' deyince)
   workflow_dispatch:
+  # Claude buradan tetikleyebilsin diye: bu dosya degisince calisir (kullanici AAB isteyince)
+  push:
+    paths:
+      - '.github/aab-istek.txt'
 
 jobs:
   aab:
