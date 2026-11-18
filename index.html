@@ -153,7 +153,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 /* fare: halka çapı = kare genişliği; sprite kutusu karenin %148'i, ortalı */
 .pet{
   position:absolute;left:50%;top:50%;width:82.5%;aspect-ratio:1;
-  transform:translate(-50%,-50%);pointer-events:none;
+  transform:translate(-50%,calc(-50% - 8px));pointer-events:none;   /* ~2 mm yukarı */
   background-repeat:no-repeat;
   filter:drop-shadow(0 .5em .6em rgba(0,0,0,.45));
 }
@@ -164,17 +164,19 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   position:relative;border:0;padding:0;margin:0;background:none;line-height:0;border-radius:50%;
   transition:transform .1s,opacity .2s,filter .2s;
 }
-.img-btn img{display:block;width:76px;height:76px}
+.img-btn > img{display:block;width:76px;height:76px}
 .img-btn:active:not(:disabled){transform:translateY(2px) scale(.97)}
 .img-btn:disabled{opacity:.55;filter:grayscale(.35)}
-.badge{
-  position:absolute;top:-6px;right:-10px;min-width:34px;height:34px;padding:0 6px;
-  display:flex;align-items:center;justify-content:center;line-height:0;
+.img-btn > .badge{
+  position:absolute;top:-4px;right:-4px;left:auto;bottom:auto;
+  width:28px;height:28px;min-width:0;max-width:none;padding:0;margin:0;
+  display:flex;align-items:center;justify-content:center;line-height:0;overflow:visible;
   background:url(ui-rozet.webp) center/100% 100% no-repeat;
 }
-.badge .dg img{height:22px}
-.badge.plus{padding:0;background:none}
-.badge.plus img{display:block;height:34px;width:auto}
+.img-btn > .badge .dg{display:inline-flex;height:18px}
+.img-btn > .badge .dg img{display:block;width:auto;height:18px;max-width:none}
+.img-btn > .badge.plus{background:none}
+.img-btn > .badge.plus img{display:block;width:28px;height:28px}
 
 /* ---------- Kaplama kartları (kazandın / can bitti / reklam / duraklat) ---------- */
 .overlay{
@@ -208,6 +210,22 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .ic-btn:active img{transform:scale(.92)}
 .ic-btn.close-x img{width:52px;height:52px}
 .card .close-row{display:flex;justify-content:center;margin-top:10px}
+/* duraklat / ayarlar: dikey satır listesi (simge solda, yazı sağda) */
+.card.menu{
+  aspect-ratio:auto;min-height:calc(var(--cw) * 375 / 645);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:calc(var(--cw) * .12) 9% calc(var(--cw) * .11);
+}
+.card.menu h2{margin:0 0 2px}
+.row-list{display:flex;flex-direction:column;align-items:stretch;gap:14px;width:200px;max-width:100%}
+.row-btn{
+  display:flex;align-items:center;gap:12px;width:100%;min-height:56px;
+  border:0;padding:0;margin:0;background:none;border-radius:28px;text-align:left;
+}
+.row-btn img{display:block;flex:none;width:56px;height:56px;border-radius:50%;transition:transform .1s}
+.row-btn .cap{flex:1;min-width:0;font-size:20px;font-weight:800;line-height:1.1;color:var(--ink)}
+.row-btn .st{flex:none;font-size:14px;font-weight:700;line-height:1;color:var(--ink-dim)}
+.row-btn:active img{transform:scale(.92)}
 /* kazandın kartı: kupa */
 .win-cup{display:block;height:54px;width:auto;margin:0 auto 4px}
 /* yerleşik reklam kartı (SDK yokken) */
@@ -280,7 +298,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   .tile.pop,.tile.shake,.card,.sparkle,.tut-box{animation:none}
   .tut-hand{animation:none}
   .cell.glow::after{animation:none;opacity:1}
-  .img-btn,.ui-btn,.main-btn,.txt-btn,.ad-btn img,.ic-btn img{transition:none}
+  .img-btn,.ui-btn,.main-btn,.txt-btn,.ad-btn img,.ic-btn img,.row-btn img{transition:none}
   .ad-bar i{animation:none}
 }
 </style>
@@ -293,8 +311,8 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 
   <header class="top">
     <div class="top-left">
-      <button class="ui-btn" type="button" id="back" aria-label="Geri">
-        <img src="ui-geri.webp" width="129" height="128" alt="">
+      <button class="ui-btn" type="button" id="back" aria-label="Bölümü baştan başla">
+        <img src="ik-yeniden.webp" width="129" height="128" alt="">
       </button>
       <button class="ui-btn" type="button" id="pause" aria-label="Duraklat">
         <img src="ui-pause.webp" width="129" height="128" alt="">
@@ -1153,6 +1171,7 @@ function updateHud() {
   setHelpButton('btnGlass', 'badgeGlass', P.glass, 'Büyüteç: bir fareyi göster', play);
   $('pause').disabled = !(S.status === 'play' && !overlayOpen);
   $('settings').disabled = overlayOpen;
+  $('back').disabled = !S || overlayOpen;
 }
 
 function setHelpButton(btnId, badgeId, count, label, enabled) {
@@ -1239,6 +1258,10 @@ function startPet(el) {
 /* =====================================================================
    L. GİRİŞ
    ===================================================================== */
+/* Tek dokunuş: pati koy / kaldır (hemen, doğrulanmaz, bedava).
+   Aynı kareye DOUBLE_TAP_MS içinde 2. dokunuş: 1. dokunuşun değişikliği geri alınır, kare açılır. */
+var DOUBLE_TAP_MS = 300;
+var lastTap = null;                /* { v, s, t, prev } : son tek dokunuş */
 function onCellClick(e) {
   var btn = e.target.closest ? e.target.closest('.cell') : null;
   if (!btn || !canPlay()) return;
@@ -1247,19 +1270,22 @@ function onCellClick(e) {
   var v = view.cells[r][c];
   if (v.busy) return;
   var st = S.cells[r][c];
-  if (st === 'closed') {
-    /* 1. dokunuş: pati işareti, doğrulanmaz, bedava */
-    S.cells[r][c] = 'paw';
+  if (st === 'mouse') { lastTap = null; return; }        /* açık fare: hiçbir şey */
+  var now = Date.now();
+  if (lastTap && lastTap.v === v && lastTap.s === S && now - lastTap.t <= DOUBLE_TAP_MS) {
+    /* çift dokunuş: kareyi aç */
+    S.cells[r][c] = lastTap.prev;
+    lastTap = null;
     paintCell(r, c);
-    playPop();
-    if (!REDUCED) restartClass(v.img, 'pop');
-    if (MODE === 'tut') tutOnPaw(r, c);
-  } else if (st === 'paw') {
-    /* 2. dokunuş: kareyi aç */
     if (isMouse(r, c)) revealMouse(r, c);
     else mistake(r, c);
+    return;
   }
-  /* 'mouse': hiçbir şey */
+  lastTap = { v: v, s: S, t: now, prev: st };
+  S.cells[r][c] = st === 'paw' ? 'closed' : 'paw';
+  paintCell(r, c);
+  playPop();
+  if (!REDUCED) restartClass(v.img, 'pop');
 }
 
 /* ---------- Sesler ---------- */
@@ -1334,6 +1360,8 @@ function revealMouse(r, c) {
 function mistake(r, c) {
   var v = view.cells[r][c], img = v.img;
   v.busy = true;
+  S.cells[r][c] = 'paw';                 /* hatalı açılan kare pati olarak kalır */
+  paintCell(r, c);
   vibrate(60);
   img.classList.remove('pop');
   if (!REDUCED) { restartClass(img, 'shake'); fx(function () { img.classList.remove('shake'); }, 350); }
@@ -1447,10 +1475,10 @@ function useGlass() {
    N. ÖĞRETİCİ (bölüm 0)
    ===================================================================== */
 var TUT_STEPS = [
-  { cell: [0, 1], say: 'Her renkte bir fare saklanıyor. Buraya dokun!', paw: 'Bir daha dokun ve aç!', teach: true },
-  { cell: [1, 3], say: 'Bu renkte tek kare var. Dokun!', paw: 'Bir daha dokun!', teach: false },
-  { cell: [3, 2], say: 'Sıra sende', paw: 'Sıra sende', teach: false },
-  { cell: null, say: 'Son fareyi sen bul!', paw: 'Son fareyi sen bul!', teach: false }
+  { cell: [0, 1], say: 'Her renkte bir fare saklanıyor. Buraya iki kez hızlıca dokun!', teach: true },
+  { cell: [1, 3], say: 'Bu renkte tek kare var. İki kez dokun!', teach: false },
+  { cell: [3, 2], say: 'Sıra sende', teach: false },
+  { cell: null, say: 'Son fareyi sen bul!', teach: false }
 ];
 
 function startTutorial() {
@@ -1490,8 +1518,6 @@ function tutAllows(r, c) {
   var st = TUT_STEPS[tut.step];
   return !st.cell || (st.cell[0] === r && st.cell[1] === c);
 }
-
-function tutOnPaw() { tutSay(TUT_STEPS[tut.step].paw); }
 
 function tutOnMistake() {
   tutSay('Burada olamaz. Tekrar dene!');
@@ -1537,6 +1563,8 @@ function tutOnReveal(r, c) {
     })(groups[gi], t);
     t += 350 + groups[gi][1].length * 120 + 1300;
   }
+  fx(function () { tutSay('Tek dokunuş pati koyar ya da kaldırır.'); }, t);
+  t += REDUCED ? 600 : 2200;
   fx(next, t);
 }
 
@@ -1704,8 +1732,16 @@ function iconButton(act, src, w, caption, extra) {
          '<img src="' + src + '" width="' + w + '" height="128" alt=""><span class="cap">' + caption + '</span></button>';
 }
 
-function openOverlay(html, dismissible) {
+/* duraklat / ayarlar kartındaki satır tuşu: simge solda, yazı sağda (state: küçük durum yazısı) */
+function rowButton(act, src, w, caption, extra, state) {
+  return '<button class="row-btn" type="button" data-act="' + act + '"' + (extra || '') + ' aria-label="' + caption + '">' +
+         '<img src="' + src + '" width="' + w + '" height="128" alt=""><span class="cap">' + caption + '</span>' +
+         (state != null ? '<span class="st" aria-hidden="true">' + state + '</span>' : '') + '</button>';
+}
+
+function openOverlay(html, dismissible, cls) {
   var card = $('card');
+  card.className = 'card' + (cls ? ' ' + cls : '');
   card.innerHTML = html;
   $('overlay').hidden = false;
   overlayOpen = true;
@@ -1780,10 +1816,9 @@ function showPause() {
   if (!S || S.status !== 'play' || overlayOpen) return;
   openOverlay(
     '<h2 id="ovTitle">Duraklatıldı</h2>' +
-    '<div class="icon-row">' +
-    iconButton('close', 'ik-oynat.webp', 130, 'Devam et') +
-    iconButton('restart', 'ik-yeniden.webp', 129, 'Baştan başla') +
-    iconButton('home', 'ik-ev.webp', 129, 'Ana sayfa') + '</div>', true);
+    '<div class="row-list">' +
+    rowButton('close', 'ik-oynat.webp', 130, 'Devam et') +
+    rowButton('home', 'ik-ev.webp', 129, 'Ana sayfa') + '</div>', true, 'menu');
 }
 
 /* ---------- Ayarlar: müzik / ses / titreşim (P.music / P.sfx / P.vibe) ---------- */
@@ -1791,16 +1826,13 @@ var TOGGLES = { music: ['Müzik', 'ik-muzik'], sfx: ['Ses', 'ik-ses'], vibe: ['T
 function toggleSrc(key) { return TOGGLES[key][1] + (P[key] ? '' : '-kapali') + '.webp'; }
 function showSettings() {
   if (overlayOpen) return;
-  var html = '<h2 id="ovTitle">Ayarlar</h2><div class="icon-row">', k;
+  var html = '<h2 id="ovTitle">Ayarlar</h2><div class="row-list">', k;
   for (k in TOGGLES) if (TOGGLES.hasOwnProperty(k)) {
-    html += '<button class="ic-btn tog" type="button" data-act="toggle" data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') +
-            '" aria-label="' + TOGGLES[k][0] + '"><img src="' + toggleSrc(k) + '" width="128" height="128" alt="">' +
-            '<span class="cap">' + TOGGLES[k][0] + '</span></button>';
+    html += rowButton('toggle', toggleSrc(k), 128, TOGGLES[k][0],
+                      ' data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') + '"', P[k] ? 'Açık' : 'Kapalı');
   }
-  html += '</div><div class="close-row">' +
-          '<button class="ic-btn close-x" type="button" data-act="close" aria-label="Kapat">' +
-          '<img src="ik-kapat.webp" width="129" height="128" alt=""></button></div>';
-  openOverlay(html, true);
+  html += rowButton('close', 'ik-kapat.webp', 129, 'Kapat') + '</div>';
+  openOverlay(html, true, 'menu');
 }
 
 var ACTIONS = {
@@ -1821,6 +1853,8 @@ var ACTIONS = {
     save();
     btn.setAttribute('aria-pressed', P[k] ? 'true' : 'false');
     btn.querySelector('img').setAttribute('src', toggleSrc(k));
+    var stEl = btn.querySelector('.st');
+    if (stEl) stEl.textContent = P[k] ? 'Açık' : 'Kapalı';
     if (k === 'music') Music.sync();
     if (k === 'vibe' && P.vibe) vibrate(40);
   },
@@ -1892,9 +1926,11 @@ function preload(list, done) {
 })();
 
 $('grid').addEventListener('click', onCellClick);
+$('grid').addEventListener('dblclick', function (e) { e.preventDefault(); });   /* çift dokunuş yakınlaştırmasın */
 $('btnHint').addEventListener('click', useHint);
 $('btnGlass').addEventListener('click', useGlass);
 $('pause').addEventListener('click', showPause);
+$('back').addEventListener('click', function () { if (S && !overlayOpen) ACTIONS.restart(); });
 $('settings').addEventListener('click', showSettings);
 
 /* tüm kare resimleri + arayüz yüklenince kaydedilen bölümden (ya da öğreticiden) başlar */
@@ -1903,7 +1939,7 @@ $('settings').addEventListener('click', showSettings);
   for (i = 0; i < TILE_COLORS.length; i++) list.push('kare-' + TILE_COLORS[i] + '.webp', 'pati-' + TILE_COLORS[i] + '.webp');
   list.push('kalp-dolu.webp', 'kalp-bos.webp');
   /* arayüz resimleri + rakamlar */
-  list.push('ui-pause.webp', 'ui-fullscreen.webp', 'ui-geri.webp', 'ui-baslik.webp',
+  list.push('ui-pause.webp', 'ui-fullscreen.webp', 'ui-baslik.webp',
             'ui-yildiz-dolu.webp', 'ui-yildiz-yarim.webp', 'ui-yildiz-bos.webp',
             'ui-para.webp', 'ui-saat.webp', 'ui-pati.webp', 'ui-sayac.webp',
             'ui-rozet.webp', 'ui-arti.webp', 'ui-kart.webp', 'ui-btn-altin.webp',
