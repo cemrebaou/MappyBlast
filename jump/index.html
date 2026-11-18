@@ -1281,7 +1281,8 @@ var Ads = {
   banner: function () { if (P.runs >= 1 && !P.noAds) Ads.provider.showBanner(); else Ads.provider.hideBanner(); },
   /* "Tekrar oyna"ya basınca: en az 3 oyun bitişi ve 3 dk arayla, ilk 2 oyunda hiç */
   interstitialAfterGameOver: function (then) {
-    var show = !Ads.busy && P.runs > AD_FIRST_RUNS && P.goSince >= AD_EVERY && (!P.adLastAt || Date.now() - P.adLastAt >= AD_MIN_MS);
+    /* kaybedince tekrar oynamadan önce her seferinde geçiş reklamı (yüklüyse) */
+    var show = !Ads.busy && !P.noAds;
     /* gerçek reklam yüklü değilse sayaçlara dokunmadan geç (oyunu bekletme) */
     if (show && Ads.provider.ready && !Ads.provider.ready()) show = false;
     if (!show) { then(); return; }

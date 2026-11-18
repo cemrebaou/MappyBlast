@@ -2264,6 +2264,20 @@ var Ads = {
     Ads.provider.showInterstitial(function () { Ads.busy = false; Music.hold(false); then(); });
   },
 
+  /* kaybedince "baştan başla": her seferinde geçiş reklamı (yüklüyse), sonra bölüm yeniden başlar */
+  interstitialAfterLoss: function (then) {
+    var show = MODE !== 'tut' && !P.noAds && !Ads.busy;
+    if (show && Ads.provider.ready && !Ads.provider.ready()) show = false;
+    if (!show) { then(); return; }
+    Ads.busy = true;
+    Celeb.stop();
+    Music.hold(true);
+    P.adLastAt = Date.now();
+    P.counters.interstitialShown++;
+    save();
+    Ads.provider.showInterstitial(function () { Ads.busy = false; Music.hold(false); then(); });
+  },
+
   /* bölüm başında: banner yalnızca bölüm 5'ten sonra, öğreticide ve noAds oyuncuda yok */
   banner: function () {
     var want = MODE !== 'tut' && LEVEL && LEVEL.L > BANNER_MIN_LEVEL && !P.noAds;
@@ -2415,6 +2429,7 @@ var ACTIONS = {
   /* aynı bulmaca, aynı kip */
   restart: function () {
     if (MODE === 'tut') { closeOverlay(); startTutorial(); return; }
+    if (S.status === 'over') { Ads.interstitialAfterLoss(function () { begin(PUZ, MODE); }); return; }
     begin(PUZ, MODE);
   },
   home: function () {

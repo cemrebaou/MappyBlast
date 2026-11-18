@@ -189,3 +189,4 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - Müzik tam ekran reklam boyunca susar (`Music.hold`), sonra devam eder. Tüm çağrılar try/catch + `.catch`; reklam hatası oyunu bozmaz.
 - Sıklık kuralları aynı (puzzle geçiş kuralları, profil, ödüllü reklam: ampul 5e, büyüteç 3e dolar / can dolar; jump ilk 2 oyunda geçiş yok, ≥3 oyun bitişi + 3 dk, oyun başına 1 ödüllü devam).
 - Ampul/büyüteç bitince: hak rozetinde + çıkar, dokununca reklam kartı; izleyince ampul 5'e, büyüteç 3'e dolar (HELP_START).
+- Kaybedince tekrar oynama: Puzzle 'Baştan başla' ve Jump 'Tekrar oyna' her seferinde geçiş reklamı gösterir (yüklüyse; reklamsız oyuncuya yok).
