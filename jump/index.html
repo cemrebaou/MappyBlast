@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mappy Jump</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#3a2a5e;
+  --ink-dim:#6f6089;
+  --font:"Baloo 2","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;
+  color-scheme:light;
+  /* 1u = min(genişlik/390, yükseklik/844) px (küçük telefonda en az 1). JS (fitHud) kesin değeri yazar. */
+  --u:max(min(100vw / 390, 100vh / 844), min(1px, 100vw / 360));
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{
+  background:#7cc7ff;color:var(--ink);font-family:var(--font);line-height:1;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:calc(3*var(--u)) solid #5c35aa;outline-offset:calc(3*var(--u))}
+img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+
+/* ---------- Oyun tuvali (tüm ekran; aynı zamanda sol/sağ yarı dokunuş alanı) ---------- */
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+/* ---------- Üst gösterge ---------- */
+.hud{position:fixed;inset:0;pointer-events:none;z-index:2}
+.hud button{pointer-events:auto}
+.top-left{position:absolute;left:calc(10*var(--u) + env(safe-area-inset-left,0px));top:calc(10*var(--u) + env(safe-area-inset-top,0px));display:flex;gap:calc(4*var(--u))}
+.ui-btn{border:0;padding:0;margin:0;background:none;border-radius:50%;line-height:0;transition:transform .1s}
+.ui-btn img{display:block;height:calc(46*var(--u));width:auto;filter:drop-shadow(0 calc(2*var(--u)) calc(3*var(--u)) rgba(30,20,60,.25))}
+.ui-btn:active{transform:scale(.92)}
+.fs-btn{position:absolute;right:calc(10*var(--u) + env(safe-area-inset-right,0px));top:calc(10*var(--u) + env(safe-area-inset-top,0px))}
+.score{position:absolute;left:50%;top:calc(10*var(--u) + env(safe-area-inset-top,0px));transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:calc(4*var(--u))}
+.score-main{display:flex;align-items:flex-end;gap:calc(3*var(--u));filter:drop-shadow(0 calc(2*var(--u)) calc(3*var(--u)) rgba(30,20,60,.3))}
+.score-main .dg img{height:calc(46*var(--u))}
+.score-main .unit{font-size:calc(24*var(--u));font-weight:800;color:#fff;line-height:1;padding-bottom:calc(5*var(--u));
+  text-shadow:0 calc(2*var(--u)) 0 #3a1d7a,0 0 calc(4*var(--u)) rgba(58,29,122,.6)}
+.best{display:flex;align-items:center;gap:calc(5*var(--u));padding:calc(3*var(--u)) calc(10*var(--u)) calc(2*var(--u));
+  border-radius:calc(14*var(--u));background:rgba(255,255,255,.78);box-shadow:0 calc(2*var(--u)) 0 rgba(58,29,122,.25)}
+.best .k{font-size:calc(13*var(--u));font-weight:800;color:#5c35aa;letter-spacing:.04em;padding-top:calc(2*var(--u))}
+.best .dg img{height:calc(20*var(--u))}
+.dg{display:inline-flex;align-items:center;line-height:0;white-space:nowrap}
+.dg img{display:block;width:auto;flex:none}
+
+/* ---------- Sol / sağ yön tuşları (PC'de de görünür) ---------- */
+.steer{
+  position:absolute;bottom:calc(20*var(--u) + env(safe-area-inset-bottom,0px));
+  width:calc(86*var(--u));height:calc(86*var(--u));border-radius:50%;padding:0;
+  border:calc(4*var(--u)) solid #fff;
+  box-shadow:0 calc(5*var(--u)) 0 rgba(58,29,122,.28),0 calc(8*var(--u)) calc(16*var(--u)) rgba(30,20,60,.22);
+  display:grid;place-items:center;opacity:.92;transition:transform .08s,filter .08s;touch-action:none;
+}
+.steer svg{width:52%;height:52%;display:block}
+.steer.left{left:calc(18*var(--u) + env(safe-area-inset-left,0px));background:radial-gradient(circle at 35% 30%,#fff3fa 0,#ffd2e8 45%,#f6b1d3 100%)}
+.steer.right{right:calc(18*var(--u) + env(safe-area-inset-right,0px));background:radial-gradient(circle at 35% 30%,#f2fbff 0,#c9e8ff 45%,#9fd0f5 100%)}
+.steer.on{transform:scale(.92) translateY(calc(2*var(--u)));filter:brightness(1.06)}
+
+/* ---------- "Başlamak için dokun" ---------- */
+.tap{position:fixed;inset:0;z-index:20;border:0;padding:0;margin:0;width:100%;background:rgba(40,30,80,.22);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:28vh}
+.tap[hidden]{display:none}
+.tap .pill{padding:calc(12*var(--u)) calc(28*var(--u)) calc(8*var(--u));border-radius:calc(30*var(--u));
+  font-size:calc(24*var(--u));font-weight:800;color:#4a2500;background:url(../ui-btn-altin.webp) center/100% 100% no-repeat;
+  animation:tapPulse 1.2s ease-in-out infinite;white-space:nowrap}
+@keyframes tapPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* ---------- Kaplama kartları (puzzle ile aynı görünüm) ---------- */
+.overlay{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:calc(20*var(--u));background:rgba(58,42,94,.38)}
+.overlay[hidden]{display:none}
+.card{
+  --cw:min(88vw,calc(360*var(--u)));
+  position:relative;width:var(--cw);aspect-ratio:645/375;
+  padding:calc(var(--cw) * .1) 9% calc(var(--cw) * .08);
+  text-align:center;color:var(--ink);
+  background:url(../ui-kart.webp) center/100% 100% no-repeat;
+  animation:cardIn .22s ease-out;
+}
+@keyframes cardIn{from{transform:translateY(calc(12*var(--u))) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.card:focus{outline:none}
+.card h2{margin:0 0 calc(8*var(--u));font-size:min(calc(28*var(--u)),7.4vw);white-space:nowrap;font-weight:800;line-height:1.1;color:#3a1d7a}
+.card p{margin:0 0 calc(12*var(--u));font-size:calc(18*var(--u));font-weight:600;line-height:1.3;color:var(--ink)}
+.card p b{color:#3a1d7a;font-weight:800}
+.card.menu{aspect-ratio:auto;min-height:calc(var(--cw) * 375 / 645);display:block;padding:calc(var(--cw) * .1) 8% calc(var(--cw) * .09)}
+.card.menu h2{margin:0 0 calc(12*var(--u));text-align:center}
+.card .acts{display:flex;flex-direction:column;align-items:center;gap:calc(10*var(--u))}
+.card .acts.pair{flex-direction:row;justify-content:center;gap:calc(8*var(--u));margin-top:calc(6*var(--u))}
+.card .acts.pair button{flex:1 1 0;min-width:0;max-width:calc(150*var(--u));height:calc(50*var(--u));padding:calc(3*var(--u)) calc(8*var(--u)) 0;font-size:min(calc(17*var(--u)),4.3vw);white-space:nowrap}
+.row-list{display:block;width:calc(216*var(--u));max-width:100%;margin:0 auto}
+.row-btn{display:block;width:100%;min-height:calc(56*var(--u));margin:0 0 calc(12*var(--u));border:0;padding:0;background:none;border-radius:calc(28*var(--u));text-align:left}
+.row-btn:last-child{margin-bottom:0}
+.rb-in{display:flex;align-items:center;width:100%}
+.row-btn img{display:block;flex:0 0 calc(56*var(--u));width:calc(56*var(--u));height:calc(56*var(--u));border-radius:50%;margin-right:calc(12*var(--u));transition:transform .1s}
+.row-btn .cap{flex:1 1 auto;min-width:0;font-size:calc(20*var(--u));font-weight:800;line-height:1.1;color:var(--ink);white-space:nowrap}
+.row-btn .st{flex:0 0 auto;margin-left:calc(8*var(--u));font-size:calc(14*var(--u));font-weight:700;line-height:1;color:var(--ink-dim);white-space:nowrap}
+.row-btn:active img{transform:scale(.92)}
+.ad-btn{border:0;padding:calc(4*var(--u));margin:0 auto;background:none;border-radius:calc(22*var(--u));display:flex;flex-direction:column;align-items:center;gap:calc(6*var(--u))}
+.ad-btn img{display:block;width:calc(68*var(--u));height:calc(68*var(--u));border-radius:50%;transition:transform .1s}
+.ad-btn .cap{font-size:calc(17*var(--u));font-weight:800;line-height:1.15;color:var(--ink);max-width:11em}
+.ad-btn:active img{transform:scale(.94)}
+.main-btn,.txt-btn{
+  min-width:calc(150*var(--u));height:calc(52*var(--u));border:0;border-radius:calc(26*var(--u));padding:calc(3*var(--u)) calc(22*var(--u)) 0;
+  font-size:calc(20*var(--u));font-weight:800;background:center/100% 100% no-repeat;transition:transform .1s;
+}
+.main-btn{color:#4a2500;background-image:url(../ui-btn-altin.webp)}
+.txt-btn{color:#3a1d7a;font-size:calc(19*var(--u));background-image:url(../ui-btn-mor.webp)}
+.main-btn:active,.txt-btn:active{transform:scale(.95)}
+.go-stats{display:flex;justify-content:center;gap:calc(18*var(--u));margin:0 0 calc(10*var(--u))}
+.go-stat{display:flex;flex-direction:column;align-items:center;gap:calc(4*var(--u))}
+.go-stat .k{font-size:calc(14*var(--u));font-weight:800;color:var(--ink-dim);letter-spacing:.04em}
+.go-stat .dg img{height:calc(34*var(--u))}
+.go-stat.small .dg img{height:calc(26*var(--u))}
+.new-best{display:inline-block;margin:0 0 calc(8*var(--u));padding:calc(3*var(--u)) calc(12*var(--u)) calc(1*var(--u));border-radius:calc(12*var(--u));
+  font-size:calc(15*var(--u));font-weight:800;color:#fff;background:linear-gradient(180deg,#ffb84d,#f08a1c);box-shadow:0 calc(2*var(--u)) 0 #b3570b}
+.sparkle{position:absolute;width:auto;pointer-events:none;animation:twinkle 1.6s ease-in-out infinite}
+.sparkle.s1{height:calc(30*var(--u));top:9%;left:9%}
+.sparkle.s2{height:calc(24*var(--u));top:12%;right:10%;animation-delay:.55s}
+@keyframes twinkle{0%,100%{transform:scale(.7) rotate(0);opacity:.55}50%{transform:scale(1.1) rotate(15deg);opacity:1}}
+.ad-bar{width:80%;height:calc(12*var(--u));margin:calc(10*var(--u)) auto calc(2*var(--u));border-radius:calc(6*var(--u));background:#e6d9f3;overflow:hidden}
+.ad-bar i{display:block;width:100%;height:100%;border-radius:calc(6*var(--u));background:#7a4fc8;transform-origin:left center;animation:adBar 2s linear both}
+@keyframes adBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+@media (prefers-reduced-motion:reduce){
+  .card,.sparkle,.tap .pill{animation:none}
+  .ad-bar i{animation:none}
+  .steer,.ui-btn,.main-btn,.txt-btn,.row-btn img,.ad-btn img{transition:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="game" aria-label="Mappy Jump oyun alanı. Sol ya da sağ yarıya basılı tut: yön ver."></canvas>
+
+<div class="hud" id="hud">
+  <div class="top-left">
+    <button class="ui-btn" type="button" id="settings" aria-label="Ayarlar"><img src="../ui-ayar.webp" width="129" height="128" alt=""></button>
+    <button class="ui-btn" type="button" id="pause" aria-label="Duraklat"><img src="../ui-pause.webp" width="129" height="128" alt=""></button>
+  </div>
+  <div class="score">
+    <div class="score-main"><span id="scoreNum"></span><span class="unit" aria-hidden="true">m</span></div>
+    <div class="best"><span class="k">EN İYİ</span><span id="bestNum"></span></div>
+  </div>
+  <button class="ui-btn fs-btn" type="button" id="fs" aria-label="Tam ekran"><img src="../ui-fullscreen.webp" width="129" height="128" alt=""></button>
+  <button class="steer left" type="button" id="btnL" aria-label="Sola git">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M25 7 L11 20 L25 33" fill="none" stroke="#5c35aa" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button class="steer right" type="button" id="btnR" aria-label="Sağa git">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M15 7 L29 20 L15 33" fill="none" stroke="#2f5f9e" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</div>
+
+<button class="tap" type="button" id="tapStart" aria-label="Başlamak için dokun"><span class="pill">Başlamak için dokun</span></button>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="card" id="card" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ovTitle"></div>
+</div>
+
+<script>
+/* =====================================================================
+   MAPPY JUMP — sonsuz zıplama. Fare kendi zıplar, oyuncu yalnızca sola/sağa yön verir.
+   Dünya birimi: ekran yüksekliği = 10 birim (1 birim = 1 m skor). Fizik sabit adımlı (1/120 sn).
+   ===================================================================== */
+function $(id) { return document.getElementById(id); }
+
+/* ---------- Kayıt (localStorage "mappyJump.v1"; puzzle'dan ayrı) ---------- */
+var SAVE_KEY = 'mappyJump.v1';
+var P = (function () {
+  var d = { music: true, sfx: true, vibe: true, best: 0, runs: 0, goSince: 0, adLastAt: 0,
+            counters: { interstitialShown: 0, rewardedOffered: 0, rewardedWatched: 0 } }, o = null, k;
+  try { var raw = window.localStorage.getItem(SAVE_KEY); if (raw) o = JSON.parse(raw); } catch (e) { o = null; }
+  if (o && typeof o === 'object') {
+    for (k in d) if (d.hasOwnProperty(k) && o.hasOwnProperty(k) && typeof o[k] === typeof d[k]) d[k] = o[k];
+    if (!d.counters || typeof d.counters !== 'object') d.counters = { interstitialShown: 0, rewardedOffered: 0, rewardedWatched: 0 };
+  }
+  return d;
+})();
+function save() { try { window.localStorage.setItem(SAVE_KEY, JSON.stringify(P)); } catch (e) {} }
+
+var REDUCED = false;
+try { REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+/* =====================================================================
+   SABİTLER (OYUN.md "Mappy Jump" bölümünde de yazılı)
+   ===================================================================== */
+var VIEW_H = 10;            /* ekran yüksekliği, birim */
+var COL_ASPECT = 0.62;      /* oyun sütunu en fazla yükseklik × 0.62 geniş (geniş ekranda ortada) */
+var DT = 1 / 120;           /* sabit fizik adımı */
+var GRAV = 22;              /* yerçekimi, birim/sn² */
+var APEX = 3.15;            /* zıplama tepesi: ipin çizgisinin 3.15 birim üstü */
+var VX_MAX = 5.5, ACCEL = 32, TURN_MUL = 1.8, FRICTION = 20, VY_MIN = -16;
+var MOUSE_H = 1.3, MOUSE_W = MOUSE_H * 202 / 256, FOOT_HW = 0.2;
+var ROPE_H = 0.72;          /* ip resminin çizim yüksekliği (130 px) */
+var ROPE_S = ROPE_H / 130;  /* 1 kaynak px = ROPE_S birim */
+var ROPE_LINE_PX = 12;      /* ipin üst yüzeyi, kare içinde 12. px */
+var ROPE_CAP_PX = 24;       /* uç başlık genişliği (3 parçalı çizim) */
+var ROPE_FRAME_T = 0.11, ROPE_FRAMES = 12;
+var SAG_PX = [0, 16, 45, 73, 85, 64, 45, 30, 16, 7, 1, 0];   /* ortadaki çökme, kare başına (ip.webp'den ölçüldü) */
+var CONTACT_LAUNCH = 6 * ROPE_FRAME_T;  /* ipe değdikten 0.66 sn sonra (6. kare, ip yukarı yaylanırken) fırlar */
+var MOUSE_FRAME_T = 0.13;
+var START_W = 2.4;          /* ilk ip (başlangıç, hiç kopmaz) */
+var CAM_UNDER = 2.2;        /* kamera: son inilen ip ekranın altından 2.2 birim yukarıda */
+
+/* Renk basamakları: mavi → turkuaz → yeşil → sarı → turuncu → kırmızı */
+var ROPE_HUES = [null, 176, 122, 52, 28, 0];
+
+/* Zorluk bölgeleri (yüksekliğe göre). Sürekli değerler bir sonraki bölgeye doğru yumuşakça kayar,
+   hak sayısı (budget) bölge sınırında basamakla düşer. Gökyüzü bölgeleri aynı sınırlarda değişir. */
+var ZONES = [
+  { h: 0,   budget: 5, gap: 2.20, w: 2.00, offMin: 0.6, offMax: 1.4, moveP: 0,    moveV: 0,   fragileP: 0 },
+  { h: 60,  budget: 4, gap: 2.35, w: 1.85, offMin: 0.9, offMax: 1.8, moveP: 0.15, moveV: 0.5, fragileP: 0 },
+  { h: 150, budget: 3, gap: 2.50, w: 1.70, offMin: 1.2, offMax: 2.2, moveP: 0.30, moveV: 0.7, fragileP: 0 },
+  { h: 270, budget: 2, gap: 2.60, w: 1.55, offMin: 1.4, offMax: 2.4, moveP: 0.45, moveV: 0.9, fragileP: 0 },
+  { h: 420, budget: 2, gap: 2.70, w: 1.40, offMin: 1.6, offMax: 2.6, moveP: 0.60, moveV: 1.1, fragileP: 0 },
+  { h: 600, budget: 2, gap: 2.75, w: 1.30, offMin: 1.7, offMax: 2.7, moveP: 0.70, moveV: 1.3, fragileP: 0.5 }
+];
+var ZONE_END = 900;         /* son bölgenin değerleri buraya kadar hafifçe artmaz, sabit kalır */
+var REACH = 2.9;            /* bir sonraki ipe en kötü durumda gereken yatay yol (kenara iniş) ≤ 2.9 */
+
+function zoneIndex(y) { var i = ZONES.length - 1; while (i > 0 && y < ZONES[i].h) i--; return i; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+function zoneAt(y) {
+  var i = zoneIndex(y), a = ZONES[i], b = ZONES[i + 1], t;
+  if (!b) return a;
+  t = clamp((y - a.h) / (b.h - a.h), 0, 1);
+  return { h: a.h, budget: a.budget, gap: lerp(a.gap, b.gap, t), w: lerp(a.w, b.w, t), offMin: lerp(a.offMin, b.offMin, t),
+           offMax: lerp(a.offMax, b.offMax, t), moveP: lerp(a.moveP, b.moveP, t), moveV: lerp(a.moveV, b.moveV, t), fragileP: a.fragileP };
+}
+
+/* =====================================================================
+   SESLER + MÜZİK
+   ===================================================================== */
+var SOUNDS = { z1: 'ziplama-1.mp3', z2: 'ziplama-2.mp3', z3: 'ziplama-3.mp3', tap: '../pop-1.mp3' }, SOUND_CACHE = {};
+function playSound(name, vol) {
+  if (!P.sfx) return;
+  try {
+    var base = SOUND_CACHE[name];
+    if (!base) { base = SOUND_CACHE[name] = new Audio(SOUNDS[name]); base.preload = 'auto'; }
+    var a = base.paused ? base : base.cloneNode(true);
+    a.volume = vol == null ? 1 : vol;
+    a.currentTime = 0;
+    var p = a.play();
+    if (p && p.catch) p.catch(function () {});
+  } catch (e) {}
+}
+(function () { for (var k in SOUNDS) { try { SOUND_CACHE[k] = new Audio(SOUNDS[k]); SOUND_CACHE[k].preload = 'auto'; } catch (e) {} } })();
+var JUMP_I = 0;
+function playJump() { JUMP_I = JUMP_I % 3 + 1; playSound('z' + JUMP_I, 0.8); }
+function vibrate(ms) { try { if (P.vibe && navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+
+/* Müzik: oyun akarken (zıplama başladıktan sonra) döngüde çalar. */
+var Music = {
+  el: null, unlocked: false, held: false,
+  init: function () { try { this.el = new Audio('../muzik.mp3'); this.el.loop = true; this.el.volume = 0.35; this.el.preload = 'auto'; } catch (e) { this.el = null; } },
+  sync: function () {
+    var a = this.el;
+    if (!a) return;
+    var want = P.music && this.unlocked && !this.held && !document.hidden && !overlayOpen &&
+               (G.state === 'play' || G.state === 'ready');
+    if (want && a.paused) { try { var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+    else if (!want && !a.paused) a.pause();
+  },
+  hold: function (on) { this.held = !!on; this.sync(); }
+};
+Music.init();
+
+/* Başlangıç sesi (~4.2 sn): bitince zıplama başlar. Kapalı / engellenmişse hemen, en geç 4.5 sn. */
+var Intro = {
+  el: null,
+  init: function () { try { this.el = new Audio('baslangic.mp3'); this.el.preload = 'auto'; } catch (e) { this.el = null; } },
+  play: function () {
+    var self = this;
+    if (!P.sfx || !this.el) { G.introDone = true; return; }
+    try {
+      this.el.currentTime = 0;
+      this.el.onended = function () { G.introDone = true; };
+      var p = this.el.play();
+      if (p && p.catch) p.catch(function () { G.introDone = true; });
+    } catch (e) { G.introDone = true; }
+  },
+  pause: function () { try { if (this.el && !this.el.paused) this.el.pause(); } catch (e) {} },
+  resume: function () { try { if (this.el && G.state === 'intro' && !G.introDone && this.el.paused && this.el.currentTime > 0) { var p = this.el.play(); if (p && p.catch) p.catch(function () {}); } } catch (e) {} },
+  stop: function () { try { if (this.el) { this.el.onended = null; this.el.pause(); } } catch (e) {} }
+};
+Intro.init();
+
+/* =====================================================================
+   RESİMLER: fare + ip sprite'ları, ipin renkli kopyaları
+   ===================================================================== */
+var IMG = { fare: new Image(), ip: new Image() };
+var ROPE_TINTS = [];        /* 6 tuval: renk basamağı başına ip sayfası */
+var imagesReady = false;
+
+function hueShiftSheet(src, hue) {
+  var c = document.createElement('canvas');
+  c.width = src.naturalWidth || src.width; c.height = src.naturalHeight || src.height;
+  var x = c.getContext('2d');
+  x.drawImage(src, 0, 0);
+  if (hue == null) return c;
+  try {
+    var d = x.getImageData(0, 0, c.width, c.height), a = d.data, i, r, g, b, mx, mn, h, s, l, dd, q, p2, nr, ng, nb, t;
+    for (i = 0; i < a.length; i += 4) {
+      if (a[i + 3] < 8) continue;
+      r = a[i] / 255; g = a[i + 1] / 255; b = a[i + 2] / 255;
+      mx = Math.max(r, g, b); mn = Math.min(r, g, b); l = (mx + mn) / 2; dd = mx - mn;
+      if (dd < 0.08) continue;
+      s = l > 0.5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+      if (mx === r) h = ((g - b) / dd + (g < b ? 6 : 0)) * 60;
+      else if (mx === g) h = ((b - r) / dd + 2) * 60;
+      else h = ((r - g) / dd + 4) * 60;
+      if (h < 165 || h > 262 || s < 0.22) continue;           /* yalnızca mavi ip; altın başlıklar kalır */
+      h = hue + (h - 205) * 0.4;
+      if (hue === 52) { l = Math.min(0.92, l * 1.18 + 0.06); s = Math.min(1, s * 1.05); }   /* sarı açık olsun */
+      else if (hue === 0) { s = Math.min(1, s * 1.15); l = l * 0.95; }                     /* kırmızı net kırmızı */
+      else if (hue === 28) { l = Math.min(0.9, l * 1.08 + 0.03); }
+      h = (h % 360 + 360) % 360 / 360;
+      if (s === 0) { nr = ng = nb = l; }
+      else {
+        q = l < 0.5 ? l * (1 + s) : l + s - l * s; p2 = 2 * l - q;
+        nr = hue2rgb(p2, q, h + 1 / 3); ng = hue2rgb(p2, q, h); nb = hue2rgb(p2, q, h - 1 / 3);
+      }
+      a[i] = nr * 255; a[i + 1] = ng * 255; a[i + 2] = nb * 255;
+    }
+    x.putImageData(d, 0, 0);
+  } catch (e) {
+    /* file:// gibi durumlarda piksel okunamaz: tüm resme ton kaydırma (başlıklar da renk alır) */
+    x.clearRect(0, 0, c.width, c.height);
+    try { x.filter = 'hue-rotate(' + (hue - 205) + 'deg) saturate(1.3)'; } catch (e2) {}
+    x.drawImage(src, 0, 0);
+    x.filter = 'none';
+  }
+  return c;
+  function hue2rgb(p, q2, tt) {
+    if (tt < 0) tt += 1; if (tt > 1) tt -= 1;
+    if (tt < 1 / 6) return p + (q2 - p) * 6 * tt;
+    if (tt < 1 / 2) return q2;
+    if (tt < 2 / 3) return p + (q2 - p) * (2 / 3 - tt) * 6;
+    return p;
+  }
+}
+
+/* =====================================================================
+   OYUN DURUMU
+   ===================================================================== */
+var G = {
+  state: 'tap',             /* tap | intro | ready | play | dead | over */
+  time: 0, introT: 0, introDone: false, readyT: 0, deadT: 0,
+  camY: -CAM_UNDER, camTarget: -CAM_UNDER,
+  ropes: [], pieces: [], parts: [],
+  lastY: 0, lastX: 0, lastAmp: 0,
+  score: 0, continued: false, newBest: false, bestAtStart: 0
+};
+var M = { x: 0, y: 0, vx: 0, vy: 0, contact: null, ct: 0, sagF: 1, lastRopeX: 0, face: 1, frame: 0, v0: 1 };
+var colW = 5;               /* oyun sütunu genişliği, birim */
+var overlayOpen = false, overlayDismiss = false;
+
+function rnd(a, b) { return a + Math.random() * (b - a); }
+
+function makeRope(x, y, w, budget, fragile) {
+  return { x: x, cx: x, y: y, w: w, budget: budget, hits: 0, color: 0, anim: -1, flash: 0,
+           amp: 0, spd: 0, ph: 0, fragile: !!fragile, snap: false };
+}
+
+function resetWorld() {
+  G.ropes = []; G.pieces = []; G.parts = [];
+  G.camY = G.camTarget = -CAM_UNDER;
+  G.score = 0; G.continued = false; G.newBest = false; G.bestAtStart = P.best;
+  var r0 = makeRope(colW / 2, 0, START_W, Infinity, false);
+  G.ropes.push(r0);
+  G.lastY = 0; G.lastX = colW / 2; G.lastAmp = 0;
+  M.x = colW / 2; M.y = 0; M.vx = 0; M.vy = 0; M.contact = null; M.ct = 0; M.face = 1; M.frame = 0;
+  JUMP_I = 0;
+  genRopes();
+  updateScore();
+}
+
+/* yeni ipler: her biri bir öncekinden hep ulaşılabilir */
+function genRopes() {
+  var top = G.camY + VIEW_H + 3;
+  while (G.lastY < top) addRope();
+}
+function addRope() {
+  var y0 = G.lastY, z = zoneAt(y0 + 2.4), y = y0 + z.gap, w = z.w;
+  var lo = w / 2 + 0.1, hi = colW - w / 2 - 0.1, mag, dir, x, amp = 0, moving, budget, fragile, room;
+  if (hi < lo) { lo = hi = colW / 2; }
+  moving = Math.random() < z.moveP;
+  if (moving) amp = rnd(0.45, 0.85);
+  mag = rnd(z.offMin, z.offMax);
+  /* en kötü durum: önceki ipin kayması + bu ipin kayması + aradaki uzaklık − ipin yarısı ≤ REACH */
+  var lim = REACH + w / 2 - G.lastAmp - amp;
+  if (mag > lim) mag = Math.max(0.3, lim);
+  dir = Math.random() < 0.5 ? -1 : 1;
+  x = G.lastX + dir * mag;
+  if (x < lo || x > hi) { x = G.lastX - dir * mag; }
+  x = clamp(x, lo, hi);
+  if (moving) {
+    room = Math.min(x - lo, hi - x);
+    amp = Math.min(amp, room);
+    if (amp < 0.25) amp = 0;
+  }
+  fragile = Math.random() < z.fragileP;
+  budget = fragile ? 1 : ZONES[zoneIndex(y)].budget;
+  var r = makeRope(x, y, w, budget, fragile);
+  if (amp > 0) { r.amp = amp; r.spd = z.moveV / amp; r.ph = rnd(0, Math.PI * 2); r.x = x + amp * Math.sin(r.ph + G.time * r.spd); }
+  G.ropes.push(r);
+  G.lastY = y; G.lastX = x; G.lastAmp = amp;
+}
+
+/* =====================================================================
+   GİRDİ: tuşlar, ekranın sol/sağ yarısı, klavye
+   ===================================================================== */
+var PTR = {}, KEY_L = false, KEY_R = false;
+function inputDir() {
+  var l = KEY_L, r = KEY_R, k;
+  for (k in PTR) if (PTR.hasOwnProperty(k)) { if (PTR[k] < 0) l = true; else r = true; }
+  $('btnL').classList.toggle('on', l);
+  $('btnR').classList.toggle('on', r);
+  return (r ? 1 : 0) - (l ? 1 : 0);
+}
+function bindSteer(el, dirFn) {
+  el.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    PTR[e.pointerId] = dirFn(e);
+    try { el.setPointerCapture(e.pointerId); } catch (er) {}
+  });
+  el.addEventListener('pointermove', function (e) { if (PTR.hasOwnProperty(e.pointerId) && el.id === 'game') PTR[e.pointerId] = dirFn(e); });
+  function up(e) { delete PTR[e.pointerId]; }
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up);
+  el.addEventListener('lostpointercapture', up);
+  el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+}
+bindSteer($('btnL'), function () { return -1; });
+bindSteer($('btnR'), function () { return 1; });
+bindSteer($('game'), function (e) { return e.clientX < window.innerWidth / 2 ? -1 : 1; });
+document.addEventListener('keydown', function (e) {
+  var k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') { KEY_L = true; e.preventDefault(); }
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') { KEY_R = true; e.preventDefault(); }
+  else if ((k === 'Escape' || k === 'Esc') && overlayOpen && overlayDismiss) ACTIONS.close();
+  else if ((k === 'Escape' || k === 'Esc' || k === 'p' || k === 'P') && !overlayOpen) showPause();
+});
+document.addEventListener('keyup', function (e) {
+  var k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') KEY_L = false;
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') KEY_R = false;
+});
+window.addEventListener('blur', function () { KEY_L = KEY_R = false; PTR = {}; });
+
+/* =====================================================================
+   FİZİK (sabit adım)
+   ===================================================================== */
+function sagAt(t) {
+  var f = t / ROPE_FRAME_T, i = Math.floor(f), fr = f - i;
+  if (i >= ROPE_FRAMES - 1) return 0;
+  return lerp(SAG_PX[i], SAG_PX[i + 1], fr) * ROPE_S;
+}
+
+function step(dt) {
+  G.time += dt;
+  var i, r, ropes = G.ropes;
+  for (i = 0; i < ropes.length; i++) {
+    r = ropes[i];
+    if (r.amp > 0) r.x = r.cx + r.amp * Math.sin(r.ph + G.time * r.spd);
+    if (r.anim >= 0) { r.anim += dt; if (r.anim >= ROPE_FRAMES * ROPE_FRAME_T) r.anim = -1; }
+    if (r.flash > 0) r.flash = Math.max(0, r.flash - dt);
+  }
+  stepFx(dt);
+
+  var dir = inputDir();
+  if (G.state === 'intro') {
+    G.introT += dt;
+    if (G.introDone || G.introT >= 4.5) { Intro.stop(); startBouncing(); }
+  } else if (G.state === 'ready') {
+    G.readyT -= dt;
+    if (M.contact) { M.x += M.contact.x - M.lastRopeX; M.lastRopeX = M.contact.x; }
+    if (G.readyT <= 0) startBouncing();
+  } else if (G.state === 'play' || G.state === 'dead') {
+    /* yatay: biraz ivme + sürtünme (ipte dururken de hız birikir, fırlayınca taşınır) */
+    if (G.state === 'play' && dir) {
+      M.vx += dir * ACCEL * (M.vx * dir < 0 ? TURN_MUL : 1) * dt;
+      M.vx = clamp(M.vx, -VX_MAX, VX_MAX);
+    } else {
+      var f = FRICTION * dt;
+      M.vx = Math.abs(M.vx) <= f ? 0 : M.vx - f * (M.vx > 0 ? 1 : -1);
+    }
+    if (M.vx > 0.3) M.face = 1; else if (M.vx < -0.3) M.face = -1;
+    if (M.contact) {
+      r = M.contact;
+      M.ct += dt;
+      M.x += r.x - M.lastRopeX; M.lastRopeX = r.x;
+      M.y = r.y - sagAt(M.ct) * M.sagF;
+      if (M.ct >= CONTACT_LAUNCH) launch();
+    } else {
+      M.x += M.vx * dt;
+      var lo = MOUSE_W * 0.32, hi = colW - MOUSE_W * 0.32;
+      if (M.x < lo) { M.x = lo; if (M.vx < 0) M.vx = 0; }
+      if (M.x > hi) { M.x = hi; if (M.vx > 0) M.vx = 0; }
+      var prevY = M.y;
+      M.vy = Math.max(VY_MIN, M.vy - GRAV * dt);
+      M.y += M.vy * dt;
+      /* tek yönlü çarpışma: yalnızca düşerken, ayaklar ipin çizgisini yukarıdan geçince */
+      if (M.vy < 0 && G.state === 'play') {
+        for (i = 0; i < ropes.length; i++) {
+          r = ropes[i];
+          if (prevY >= r.y && M.y < r.y && Math.abs(M.x - r.x) <= r.w / 2 - 0.08 + FOOT_HW) { land(r); break; }
+        }
+      }
+    }
+    if (G.state === 'play' && M.y + MOUSE_H < G.camY) { G.state = 'dead'; G.deadT = 0; }
+    if (G.state === 'dead') { G.deadT += dt; if (G.deadT >= 0.35) gameOver(); }
+  }
+
+  /* kamera yalnızca yukarı */
+  if (G.camTarget > G.camY) G.camY = Math.min(G.camTarget, G.camY + (G.camTarget - G.camY) * Math.min(1, dt * 4) + 0.2 * dt);
+  /* ekranın altında kalan ipleri sil, yukarıya yenilerini ekle */
+  for (i = ropes.length - 1; i >= 0; i--) if (ropes[i].y < G.camY - 1.2 && ropes[i] !== M.contact) ropes.splice(i, 1);
+  genRopes();
+}
+
+function startBouncing() {
+  G.state = 'play';
+  var r = M.contact || nearestRopeUnder();
+  if (r) beginContact(r);
+  Music.sync();
+}
+function nearestRopeUnder() {
+  for (var i = 0; i < G.ropes.length; i++) if (Math.abs(G.ropes[i].y - M.y) < 0.01) return G.ropes[i];
+  return G.ropes[0];
+}
+function beginContact(r) {
+  M.contact = r; M.ct = 0; M.vy = 0; M.y = r.y; M.lastRopeX = r.x;
+  var dx = (M.x - r.x) / (r.w / 2);
+  M.sagF = Math.max(0.25, 1 - dx * dx);
+  r.anim = 0;
+}
+
+function land(r) {
+  if (r.budget !== Infinity) {
+    if (r.fragile) {
+      r.hits = 1; setRopeColor(r, 5); r.snap = true;          /* en yüksekte: ilk inişte zıplatır, hemen kopar */
+    } else if (r.hits >= r.budget) {
+      breakRope(r); return;                                    /* kırmızıyken iniş: kopar, fare düşer */
+    } else {
+      r.hits++;
+      setRopeColor(r, Math.round(5 * r.hits / r.budget));
+    }
+  }
+  beginContact(r);
+  M.y = r.y;
+  var sc = Math.max(0, Math.round(r.y));
+  if (sc > G.score) { G.score = sc; updateScore(); }
+  G.camTarget = Math.max(G.camTarget, r.y - CAM_UNDER);
+}
+function setRopeColor(r, c) {
+  c = clamp(c, 0, 5);
+  if (c !== r.color) { r.color = c; r.flash = 0.3; burst(r.x, r.y, REDUCED ? 3 : 8, colorCss(c), 0.6); }
+}
+
+function launch() {
+  var r = M.contact;
+  M.contact = null;
+  M.vy = Math.sqrt(2 * GRAV * Math.max(0.5, r.y + APEX - M.y));
+  M.v0 = M.vy;
+  playJump();
+  if (r.snap) breakRope(r);
+}
+
+function breakRope(r) {
+  var i = G.ropes.indexOf(r);
+  if (i >= 0) G.ropes.splice(i, 1);
+  if (M.contact === r) M.contact = null;
+  var fr = r.anim >= 0 ? Math.min(ROPE_FRAMES - 1, Math.floor(r.anim / ROPE_FRAME_T)) : 0;
+  G.pieces.push({ side: -1, x: r.x - r.w / 4, y: r.y, w: r.w / 2, vx: -0.8, vy: 1.2, rot: 0, vr: -2.2, life: 0.9, max: 0.9, color: r.color, frame: fr });
+  G.pieces.push({ side: 1, x: r.x + r.w / 4, y: r.y, w: r.w / 2, vx: 0.8, vy: 1.2, rot: 0, vr: 2.2, life: 0.9, max: 0.9, color: r.color, frame: fr });
+  burst(r.x, r.y, REDUCED ? 4 : 16, colorCss(r.color), 1);
+  vibrate(80);
+  playSound('tap', 0.55);
+}
+
+/* --- efektler: kopan parçalar + parçacıklar --- */
+function burst(x, y, n, col, power) {
+  for (var i = 0; i < n; i++) {
+    var a = rnd(0, Math.PI * 2), s = rnd(1, 3.2) * power;
+    G.parts.push({ x: x + rnd(-0.3, 0.3), y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s + 1, life: rnd(0.4, 0.75), max: 0.75, col: Math.random() < 0.35 ? '#ffe17a' : col, r: rnd(0.04, 0.09) });
+  }
+}
+function stepFx(dt) {
+  var i, p;
+  for (i = G.pieces.length - 1; i >= 0; i--) {
+    p = G.pieces[i]; p.life -= dt; p.vy -= GRAV * 0.6 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+    if (p.life <= 0) G.pieces.splice(i, 1);
+  }
+  for (i = G.parts.length - 1; i >= 0; i--) {
+    p = G.parts[i]; p.life -= dt; p.vy -= 9 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.life <= 0) G.parts.splice(i, 1);
+  }
+}
+var ROPE_CSS = ['#2f8fe8', '#1fb8b0', '#3cbf4a', '#f2cf2a', '#f5892a', '#e8333a'];
+function colorCss(c) { return ROPE_CSS[clamp(c, 0, 5)]; }
+
+/* =====================================================================
+   ÇİZİM
+   ===================================================================== */
+var cv = $('game'), ctx = cv.getContext('2d');
+var VW = 0, VH = 0, DPR = 1, K = 1, COL_L = 0;   /* K: 1 birim kaç css px; COL_L: sütunun sol kenarı (px) */
+
+function resize() {
+  var w = window.innerWidth || document.documentElement.clientWidth, h = window.innerHeight || document.documentElement.clientHeight;
+  DPR = Math.min(2.5, window.devicePixelRatio || 1);
+  VW = w; VH = h;
+  cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
+  K = h / VIEW_H;
+  var colPx = Math.min(w, h * COL_ASPECT), oldW = colW;
+  colW = colPx / K; COL_L = (w - colPx) / 2;
+  if (G.ropes.length && Math.abs(oldW - colW) > 0.001) {
+    var s = colW / oldW, i, r;
+    for (i = 0; i < G.ropes.length; i++) { r = G.ropes[i]; r.cx = clamp(r.cx * s, r.w / 2 + 0.1, Math.max(r.w / 2 + 0.1, colW - r.w / 2 - 0.1)); if (!r.amp) r.x = r.cx; }
+    M.x *= s; G.lastX *= s; M.lastRopeX = M.contact ? M.contact.x : M.lastRopeX;
+  }
+  var u = Math.max(Math.min(w / 390, h / 844), Math.min(1, w / 360));
+  document.documentElement.style.setProperty('--u', u.toFixed(4) + 'px');
+}
+function sx(x) { return COL_L + x * K; }
+function sy(y) { return VH - (y - G.camY) * K; }
+
+/* ---- gökyüzü: bölgeler zorluk sınırlarında yumuşakça değişir ---- */
+var SKY = [
+  ['#7cc7ff', '#e3f5ff'],   /* 1 sabah mavisi */
+  ['#5aa9ea', '#ffe3a8'],   /* 2 ikindi */
+  ['#e887b6', '#ffbd7a'],   /* 3 gün batımı */
+  ['#3f3183', '#b46fae'],   /* 4 alacakaranlık moru */
+  ['#0d1742', '#2a3b7c'],   /* 5 yıldızlı gece */
+  ['#02041a', '#0a1136']    /* 6 uzay laciverti */
+];
+var STAR_A = [0, 0, 0, 0.3, 0.85, 1], CLOUD_A = [0.85, 0.8, 0.7, 0.32, 0.12, 0.05];
+var CLOUD_TINT = [[255, 255, 255], [255, 250, 240], [255, 232, 238], [226, 206, 240], [170, 180, 230], [140, 150, 210]];
+function hexRgb(h) { var n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+var SKY_RGB = SKY.map(function (p) { return [hexRgb(p[0]), hexRgb(p[1])]; });
+function smooth(t) { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }
+function zoneFloat(h) {
+  var z = 0;
+  for (var i = 1; i < ZONES.length; i++) z += smooth((h - (ZONES[i].h - 15)) / 30);
+  return z;
+}
+function mixRgb(a, b, t) { return 'rgb(' + Math.round(lerp(a[0], b[0], t)) + ',' + Math.round(lerp(a[1], b[1], t)) + ',' + Math.round(lerp(a[2], b[2], t)) + ')'; }
+function zLerp(arr, zf) { var i = Math.floor(zf), t = zf - i; if (i >= arr.length - 1) return arr[arr.length - 1]; return lerp(arr[i], arr[i + 1], t); }
+
+var STARS = [], CLOUDS = [];
+(function () {
+  var i;
+  for (i = 0; i < 90; i++) STARS.push({ x: Math.random(), y: Math.random(), r: rnd(0.6, 1.8), f: rnd(1.2, 3.5), p: rnd(0, 6.3) });
+  for (i = 0; i < 9; i++) CLOUDS.push({ x: Math.random(), y: i * 1.65 + rnd(-0.4, 0.4), s: rnd(0.7, 1.3), v: rnd(0.004, 0.012) });
+})();
+
+function drawSky() {
+  var hh = G.camY + CAM_UNDER, zf = zoneFloat(hh), i = Math.floor(zf), t = zf - i, a = SKY_RGB[i], b = SKY_RGB[Math.min(i + 1, 5)];
+  var g = ctx.createLinearGradient(0, 0, 0, VH);
+  g.addColorStop(0, mixRgb(a[0], b[0], t));
+  g.addColorStop(1, mixRgb(a[1], b[1], t));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VW, VH);
+  /* yıldızlar (gece / uzay), hafif kıpırtı */
+  var sa = zLerp(STAR_A, zf), k, s, tw;
+  if (sa > 0.01) {
+    ctx.fillStyle = '#fff';
+    for (k = 0; k < STARS.length; k++) {
+      s = STARS[k];
+      tw = REDUCED ? 0.85 : 0.55 + 0.45 * Math.sin(G.time * s.f * (zf > 4.5 ? 1.6 : 1) + s.p);
+      ctx.globalAlpha = sa * tw;
+      var yy = ((s.y + G.camY * 0.004) % 1 + 1) % 1;
+      ctx.beginPath(); ctx.arc(s.x * VW, (1 - yy) * VH, s.r * Math.max(1, K / 80), 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  /* bulutlar: parallaks (kameranın 0.3 katı hızla) */
+  var ca = zLerp(CLOUD_A, zf), ct = CLOUD_TINT[Math.min(5, Math.round(zf))];
+  if (ca > 0.01) {
+    var span = 15, py = G.camY * 0.3;
+    ctx.fillStyle = 'rgb(' + ct[0] + ',' + ct[1] + ',' + ct[2] + ')';
+    for (k = 0; k < CLOUDS.length; k++) {
+      var c = CLOUDS[k], cy = ((c.y - py) % span + span) % span - 2.5;
+      var cx = ((c.x + G.time * (REDUCED ? 0 : c.v)) % 1.4) - 0.2;
+      drawCloud(cx * VW, VH - cy * K, c.s * K * 0.9, ca);
+    }
+    ctx.globalAlpha = 1;
+  }
+  /* geniş ekranda sütun dışını çok hafif koyulaştır (sınır belli olsun) */
+  if (COL_L > 2) {
+    ctx.fillStyle = 'rgba(20,10,50,.10)';
+    ctx.fillRect(0, 0, COL_L, VH); ctx.fillRect(VW - COL_L, 0, COL_L, VH);
+  }
+}
+function drawCloud(x, y, s, a) {
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  ctx.ellipse(x, y, s * 0.9, s * 0.32, 0, 0, 6.283);
+  ctx.ellipse(x - s * 0.38, y - s * 0.12, s * 0.42, s * 0.3, 0, 0, 6.283);
+  ctx.ellipse(x + s * 0.22, y - s * 0.22, s * 0.48, s * 0.38, 0, 0, 6.283);
+  ctx.fill();
+}
+
+/* ---- ip: 3 parçalı çizim (uçlar sabit, orta uzar/kısalır), kalınlık hep aynı ---- */
+function ropeFrame(r) { return r.anim >= 0 ? Math.min(ROPE_FRAMES - 1, Math.floor(r.anim / ROPE_FRAME_T)) : 0; }
+function drawRopeImg(sheet, fr, left, top, w, h, part) {
+  var sxp = (fr % 6) * 360, syp = Math.floor(fr / 6) * 130, cap = ROPE_CAP_PX * h / 130;
+  if (part === 'L') { ctx.drawImage(sheet, sxp, syp, 180, 130, left, top, w, h); return; }
+  if (part === 'R') { ctx.drawImage(sheet, sxp + 180, syp, 180, 130, left, top, w, h); return; }
+  ctx.drawImage(sheet, sxp, syp, ROPE_CAP_PX, 130, left, top, cap, h);
+  ctx.drawImage(sheet, sxp + ROPE_CAP_PX, syp, 360 - 2 * ROPE_CAP_PX, 130, left + cap, top, Math.max(1, w - 2 * cap), h);
+  ctx.drawImage(sheet, sxp + 360 - ROPE_CAP_PX, syp, ROPE_CAP_PX, 130, left + w - cap, top, cap, h);
+}
+function drawRope(r) {
+  var h = ROPE_H * K, w = r.w * K, left = sx(r.x - r.w / 2), top = sy(r.y) - ROPE_LINE_PX * ROPE_S * K, fr = ropeFrame(r);
+  var sheet = ROPE_TINTS[r.color] || ROPE_TINTS[0];
+  if (top > VH + 4 || top + h < -4) return;
+  drawRopeImg(sheet, fr, left, top, w, h);
+  if (r.flash > 0) {                 /* renk değişiminde kısa parlama */
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = (r.flash / 0.3) * 0.75;
+    drawRopeImg(sheet, fr, left, top, w, h);
+    ctx.restore();
+  }
+}
+function drawPieces() {
+  for (var i = 0; i < G.pieces.length; i++) {
+    var p = G.pieces[i], h = ROPE_H * K, w = p.w * K;
+    ctx.save();
+    ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+    ctx.translate(sx(p.x), sy(p.y));
+    ctx.rotate(p.rot);
+    drawRopeImg(ROPE_TINTS[p.color] || ROPE_TINTS[0], p.frame, -w / 2, -ROPE_LINE_PX * ROPE_S * K, w, h, p.side < 0 ? 'L' : 'R');
+    ctx.restore();
+  }
+  for (i = 0; i < G.parts.length; i++) {
+    var q = G.parts[i];
+    ctx.globalAlpha = clamp(q.life / q.max, 0, 1);
+    ctx.fillStyle = q.col;
+    ctx.beginPath(); ctx.arc(sx(q.x), sy(q.y), q.r * K, 0, 6.283); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---- fare: kare seçimi dikey hıza göre ---- */
+function mouseFrame() {
+  if (G.state === 'tap' || G.state === 'intro' || G.state === 'ready') return 0;   /* ipte dururken: 0. kare */
+  if (M.contact) return Math.min(2, Math.floor(M.ct / MOUSE_FRAME_T));            /* 0–2 çömelme */
+  if (M.vy > 0) return 3 + Math.min(3, Math.floor((1 - M.vy / M.v0) * 4));       /* 3–6 yükselme */
+  return 7 + Math.min(4, Math.floor(Math.min(1, -M.vy / (M.v0 * 0.75)) * 5));   /* 7–11 iniş */
+}
+function drawMouse() {
+  if (!imagesReady) return;
+  var f = mouseFrame(), h = MOUSE_H * K, w = MOUSE_W * K, x = sx(M.x), y = sy(M.y);
+  ctx.save();
+  ctx.translate(x, y);
+  if (M.face < 0) ctx.scale(-1, 1);
+  ctx.drawImage(IMG.fare, (f % 6) * 202, Math.floor(f / 6) * 256, 202, 256, -w / 2, -h + h * 1 / 256, w, h);
+  ctx.restore();
+}
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawSky();
+  if (imagesReady) {
+    for (var i = 0; i < G.ropes.length; i++) drawRope(G.ropes[i]);
+    drawPieces();
+    drawMouse();
+  }
+}
+
+/* =====================================================================
+   DÖNGÜ (requestAnimationFrame + sabit adım)
+   ===================================================================== */
+var acc = 0, lastT = 0;
+function frame(ts) {
+  if (!lastT) lastT = ts;
+  var d = Math.min(0.25, (ts - lastT) / 1000);
+  lastT = ts;
+  if (!overlayOpen && !document.hidden && imagesReady) {
+    acc += d;
+    while (acc >= DT) { step(DT); acc -= DT; }
+  } else acc = 0;
+  render();
+  requestAnimationFrame(frame);
+}
+
+/* =====================================================================
+   HUD: skor + en iyi (rakam resimleri)
+   ===================================================================== */
+var DIGIT_W = { '0': 53, '1': 44, '2': 41, '3': 48, '4': 53, '5': 49, '6': 50, '7': 49, '8': 49, '9': 48 };
+function digitsHTML(str, label) {
+  str = String(str);
+  var out = '', i, ch;
+  for (i = 0; i < str.length; i++) {
+    ch = str.charAt(i);
+    if (!DIGIT_W.hasOwnProperty(ch)) continue;
+    out += '<img src="../rakam-' + ch + '.webp" width="' + DIGIT_W[ch] + '" height="64" alt="" aria-hidden="true">';
+  }
+  return '<span class="dg" role="img" aria-label="' + (label || str) + '">' + out + '</span>';
+}
+function setDigits(el, n, label) {
+  var key = n + '|' + label;
+  if (el.getAttribute('data-v') === key) return;
+  el.setAttribute('data-v', key);
+  el.innerHTML = digitsHTML(n, label);
+}
+function updateScore() {
+  if (G.score > P.best) { P.best = G.score; G.newBest = true; }
+  setDigits($('scoreNum'), G.score, 'Yükseklik: ' + G.score + ' metre');
+  setDigits($('bestNum'), P.best, 'En iyi: ' + P.best + ' metre');
+}
+
+/* =====================================================================
+   REKLAM KATMANI (Ads) — puzzle ile aynı fikir, ayrı kod ve ayrı sayaçlar
+   ===================================================================== */
+var AD_SIM_MS = 2000, AD_EVERY = 3, AD_MIN_MS = 3 * 60 * 1000, AD_FIRST_RUNS = 2;
+var SimAdProvider = {
+  show: function (title, cb) {
+    openOverlay('<h2 id="ovTitle">Reklam</h2><p>' + title + '</p><div class="ad-bar" aria-hidden="true"><i></i></div>', false);
+    setTimeout(cb, AD_SIM_MS);
+  },
+  showRewarded: function (cb, failCb) { SimAdProvider.show('Ödülün birazdan geliyor…', cb); },
+  showInterstitial: function (cb) { SimAdProvider.show('Birazdan devam ediyoruz…', cb); },
+  showBanner: function () {},
+  hideBanner: function () {}
+};
+var Ads = {
+  // TODO: AdMob (Android) / AdSense H5 (web) sağlayıcısı buraya
+  provider: SimAdProvider,
+  busy: false,
+  offered: function () { P.counters.rewardedOffered++; save(); },
+  rewarded: function (placement, onReward, onFail) {
+    if (Ads.busy) return;
+    Ads.busy = true; Music.hold(true);
+    function end() { Ads.busy = false; Music.hold(false); }
+    Ads.provider.showRewarded(function () {
+      end(); P.counters.rewardedWatched++; save(); onReward();
+    }, function () { end(); if (onFail) onFail(); else showAdFail(); });
+  },
+  /* oyun bitti sayacı */
+  noteGameOver: function () { P.runs++; P.goSince++; save(); },
+  /* "Tekrar oyna"ya basınca: en az 3 oyun bitişi ve 3 dk arayla, ilk 2 oyunda hiç */
+  interstitialAfterGameOver: function (then) {
+    var show = !Ads.busy && P.runs > AD_FIRST_RUNS && P.goSince >= AD_EVERY && (!P.adLastAt || Date.now() - P.adLastAt >= AD_MIN_MS);
+    if (!show) { then(); return; }
+    Ads.busy = true; Music.hold(true);
+    P.adLastAt = Date.now(); P.goSince = 0; P.counters.interstitialShown++; save();
+    Ads.provider.showInterstitial(function () { Ads.busy = false; Music.hold(false); then(); });
+  }
+};
+
+/* =====================================================================
+   KARTLAR
+   ===================================================================== */
+function rowButton(act, src, caption, extra, state) {
+  return '<button class="row-btn" type="button" data-act="' + act + '"' + (extra || '') + ' aria-label="' + caption + '">' +
+         '<span class="rb-in"><img src="' + src + '" width="129" height="128" alt=""><span class="cap">' + caption + '</span>' +
+         (state != null ? '<span class="st" aria-hidden="true">' + state + '</span>' : '') + '</span></button>';
+}
+function openOverlay(html, dismissible, cls) {
+  var card = $('card');
+  card.className = 'card' + (cls ? ' ' + cls : '');
+  card.innerHTML = html;
+  $('overlay').hidden = false;
+  overlayOpen = true; overlayDismiss = !!dismissible;
+  $('hud').inert = true;
+  PTR = {}; KEY_L = KEY_R = false;
+  Intro.pause();
+  Music.sync();
+  card.focus();
+}
+function closeOverlay() {
+  $('overlay').hidden = true;
+  $('card').innerHTML = '';
+  overlayOpen = false;
+  $('hud').inert = false;
+  Intro.resume();
+  Music.sync();
+}
+function showPause() {
+  if (overlayOpen || G.state === 'tap' || G.state === 'over' || G.state === 'dead') return;
+  openOverlay('<h2 id="ovTitle">Duraklatıldı</h2><div class="row-list">' +
+    rowButton('close', '../ik-oynat.webp', 'Devam et') +
+    rowButton('restart', '../ik-yeniden.webp', 'Yeniden başla') +
+    rowButton('home', '../ik-ev.webp', 'Ana sayfa') + '</div>', true, 'menu');
+}
+var TOGGLES = { music: ['Müzik', '../ik-muzik'], sfx: ['Ses', '../ik-ses'], vibe: ['Titreşim', '../ik-titresim'] };
+function toggleSrc(k) { return TOGGLES[k][1] + (P[k] ? '' : '-kapali') + '.webp'; }
+function showSettings() {
+  if (overlayOpen || G.state === 'over' || G.state === 'dead') return;
+  var html = '<h2 id="ovTitle">Ayarlar</h2><div class="row-list">', k;
+  for (k in TOGGLES) if (TOGGLES.hasOwnProperty(k))
+    html += rowButton('toggle', toggleSrc(k), TOGGLES[k][0], ' data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') + '"', P[k] ? 'Açık' : 'Kapalı');
+  html += rowButton('close', '../ik-kapat.webp', 'Kapat') + '</div>';
+  openOverlay(html, true, 'menu');
+}
+var SPARKLES = '<img class="sparkle s1" src="../ui-parilti.webp" width="87" height="96" alt="">' +
+               '<img class="sparkle s2" src="../ui-parilti.webp" width="87" height="96" alt="">';
+function gameOver() {
+  G.state = 'over';
+  PTR = {};
+  Ads.noteGameOver();
+  save();
+  showGameOver();
+}
+function showGameOver() {
+  var nb = G.newBest && G.score > G.bestAtStart && G.score > 0;
+  var ad = '';
+  if (!G.continued) {
+    Ads.offered('devam');
+    ad = '<button class="ad-btn" type="button" data-act="adContinue" aria-label="Reklam izle, devam et">' +
+         '<img src="../ik-reklam.webp" width="162" height="160" alt=""><span class="cap">Reklam izle, devam et</span></button>';
+  }
+  openOverlay((nb ? SPARKLES : '') +
+    '<h2 id="ovTitle">Düştün!</h2>' +
+    (nb ? '<div style="text-align:center"><span class="new-best">Yeni rekor!</span></div>' : '') +
+    '<div class="go-stats"><div class="go-stat"><span class="k">SKOR</span>' + digitsHTML(G.score, 'Skor: ' + G.score + ' metre') + '</div>' +
+    '<div class="go-stat small"><span class="k">EN İYİ</span>' + digitsHTML(P.best, 'En iyi: ' + P.best + ' metre') + '</div></div>' +
+    ad +
+    '<div class="acts pair"><button class="txt-btn" type="button" data-act="home">Ana sayfa</button>' +
+    '<button class="main-btn" type="button" data-act="again">Tekrar oyna</button></div>', false, 'menu');
+}
+function showAdFail() {
+  openOverlay('<h2 id="ovTitle">Reklam şu an yok</h2><p>Biraz sonra tekrar dene.</p>' +
+    '<div class="acts"><button class="txt-btn" type="button" data-act="backToOver">Tamam</button></div>', false);
+}
+
+/* ödüllü devam: kameranın hemen altına (ekranın alt kısmına) taze bir ip, fare üstünde */
+function respawn() {
+  var i, r, above = null;
+  for (i = 0; i < G.ropes.length; i++) {
+    r = G.ropes[i];
+    if (r.y > G.camY + 2.6 && (!above || r.y < above.y)) above = r;
+  }
+  var z = zoneAt(G.camY + 2), y, x;
+  if (above) y = above.y - Math.min(z.gap, 2.3); else y = G.camY + 1.6;
+  if (y < G.camY + 0.9) y = G.camY + 0.9;
+  if (y > G.camY + 3) y = G.camY + 1.6;
+  /* yeni ipin çevresindeki eski ipleri kaldır */
+  for (i = G.ropes.length - 1; i >= 0; i--) if (G.ropes[i].y <= y + 0.8) G.ropes.splice(i, 1);
+  var w = Math.max(1.8, z.w);
+  x = above ? clamp(above.cx + (above.cx > colW / 2 ? -1 : 1) * Math.min(1.0, z.offMin), w / 2 + 0.1, colW - w / 2 - 0.1) : colW / 2;
+  var nr = makeRope(x, y, w, Math.max(2, ZONES[zoneIndex(y)].budget), false);
+  G.ropes.push(nr);
+  M.x = x; M.y = y; M.vx = 0; M.vy = 0; M.contact = nr; M.ct = 0; M.lastRopeX = x;
+  G.camTarget = Math.max(G.camY, G.camTarget);
+  G.state = 'ready'; G.readyT = 0.8;
+  burst(x, y, REDUCED ? 3 : 10, '#ffe17a', 0.8);
+}
+
+function restartGame() {
+  closeOverlay();
+  resetWorld();
+  M.contact = G.ropes[0]; M.lastRopeX = M.x;
+  G.state = 'ready'; G.readyT = 0.7;
+  Music.sync();
+}
+
+var ACTIONS = {
+  close: function () { closeOverlay(); },
+  restart: function () { Intro.stop(); restartGame(); },
+  home: function () { save(); window.location.href = '../index.html'; },
+  again: function () { Ads.interstitialAfterGameOver(restartGame); },
+  backToOver: function () { showGameOver(); },
+  adContinue: function () {
+    Ads.rewarded('devam', function () { G.continued = true; closeOverlay(); respawn(); Music.sync(); });
+  },
+  toggle: function (btn) {
+    var k = btn.getAttribute('data-key');
+    if (!TOGGLES.hasOwnProperty(k)) return;
+    P[k] = !P[k]; save();
+    btn.setAttribute('aria-pressed', P[k] ? 'true' : 'false');
+    btn.querySelector('img').setAttribute('src', toggleSrc(k));
+    var st = btn.querySelector('.st'); if (st) st.textContent = P[k] ? 'Açık' : 'Kapalı';
+    if (k === 'music') Music.sync();
+    if (k === 'sfx' && !P.sfx && G.state === 'intro') { Intro.stop(); G.introDone = true; }
+    if (k === 'vibe' && P.vibe) vibrate(40);
+  }
+};
+$('card').addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('button[data-act]') : null;
+  if (b && !b.disabled && ACTIONS[b.getAttribute('data-act')]) ACTIONS[b.getAttribute('data-act')](b);
+});
+$('overlay').addEventListener('click', function (e) { if (e.target === $('overlay') && overlayDismiss) closeOverlay(); });
+document.addEventListener('click', function (e) {
+  var b = e.target && e.target.closest ? e.target.closest('button') : null;
+  if (b && !b.classList.contains('steer') && b.id !== 'tapStart') playSound('tap', 0.5);
+});
+$('settings').addEventListener('click', showSettings);
+$('pause').addEventListener('click', showPause);
+
+/* dokun-başla: sesi açar, giriş sesini çalar */
+$('tapStart').addEventListener('click', function () {
+  $('tapStart').hidden = true;
+  Music.unlocked = true;
+  /* efekt seslerinin kilidini aç (sessizce) */
+  for (var k in SOUND_CACHE) if (SOUND_CACHE.hasOwnProperty(k)) {
+    try { var a = SOUND_CACHE[k]; a.muted = true; var p = a.play(); if (p && p.then) p.then((function (x) { return function () { x.pause(); x.currentTime = 0; x.muted = false; }; })(a)).catch(function () {}); } catch (e) {}
+  }
+  G.state = 'intro'; G.introT = 0; G.introDone = false;
+  Intro.play();
+});
+
+/* sayfa gizlenince duraklat */
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) {
+    if (!overlayOpen && (G.state === 'play' || G.state === 'ready' || G.state === 'intro')) showPause();
+  }
+  Music.sync();
+});
+
+/* tam ekran (dikey kalır) */
+$('fs').addEventListener('click', function () {
+  try {
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    var p = document.documentElement.requestFullscreen();
+    if (p && p.then) p.then(function () {
+      if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {});
+    }).catch(function () {});
+  } catch (e) {}
+});
+
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function () { setTimeout(resize, 80); });
+document.addEventListener('fullscreenchange', function () { setTimeout(resize, 60); });
+
+/* =====================================================================
+   BAŞLAT
+   ===================================================================== */
+(function boot() {
+  resize();
+  resetWorld();
+  var left = 2;
+  function one() {
+    if (--left > 0) return;
+    for (var i = 0; i < ROPE_HUES.length; i++) ROPE_TINTS.push(hueShiftSheet(IMG.ip, ROPE_HUES[i]));
+    imagesReady = true;
+  }
+  IMG.fare.onload = IMG.fare.onerror = one;
+  IMG.ip.onload = IMG.ip.onerror = one;
+  IMG.fare.src = 'fare.webp';
+  IMG.ip.src = 'ip.webp';
+  /* arayüz resimlerini önceden yükle */
+  var pre = ['../ik-reklam.webp', '../ui-kart.webp', '../ui-btn-altin.webp', '../ui-btn-mor.webp', '../ik-oynat.webp', '../ik-yeniden.webp',
+             '../ik-ev.webp', '../ik-kapat.webp', '../ik-muzik.webp', '../ik-muzik-kapali.webp', '../ik-ses.webp', '../ik-ses-kapali.webp',
+             '../ik-titresim.webp', '../ik-titresim-kapali.webp', '../ui-parilti.webp'];
+  for (var d = 0; d <= 9; d++) pre.push('../rakam-' + d + '.webp');
+  for (var j = 0; j < pre.length; j++) { var im = new Image(); im.src = pre[j]; }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

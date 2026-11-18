@@ -1,5 +1,20 @@
 # MappyBlast
 
+## Yapı (2026-11-18)
+- `index.html` = açılış (launcher): yükleme ekranı + ana menü. `<title>Mappy</title>`.
+- `puzzle.html` = Mappy Puzzle (eski `index.html`; varlıkları kök klasörde, yollar aynı). "Ana sayfa" (`ik-ev`) → `index.html`. Kayıt `fareBulmaca.v1`.
+- `jump/index.html` = Mappy Jump (kendi varlıkları `jump/` içinde; ortak arayüz resimlerini `../` ile kullanır). Kayıt `mappyJump.v1`. Puzzle ile ortak JS dosyası yok, kod ayrı.
+- Launcher ayarı: `mappyMenu.v1` (`music`).
+
+## Açılış (`index.html`)
+- `menu.webp` (941×1672, dik): üst yarı "Mappy Puzzle" afişi, alt yarı "Mappy Jump". Ayırıcı mavi/altın çubuk y ≈ 845–890, bölme çizgisi y = 867.
+- Yükleme: yumuşak zemin, menü resminin soluk gri kopyası; renkli resim soldan sağa açılır, en altta ince ilerleme çizgisi (5u). İlerleme = gerçek yükleme: önce `menu.webp`, sonra iki oyunun ana dosyaları (puzzle kare/pati/ui/ik/rakam resimleri, fare sprite'ları, `muzik.mp3`, `pop-1`, `ses-fare`; jump `fare.webp`, `ip.webp`, `baslangic.mp3`, `ziplama-1..3.mp3`). Resimler `new Image()`, mp3'ler `fetch` ile; hata / 8 sn zaman aşımı da "bitti" sayılır. En az 1.2 sn sürer.
+- Menü: resim ekranı doldurur. Dik ekranda (en/boy ≤ 0.75) cover, ama yanlardan en çok 22 px (kaynak) kesilir ki logolar kesilmesin; kalan üst/alt şerit aynı resmin bulanık açık kopyasıyla dolar. Geniş ekranda contain + aynı bulanık zemin. Hiç germe yok.
+- Ayırıcının üstü tam genişlik `<a href="puzzle.html" aria-label="Mappy Puzzle'ı oyna">`, altı `<a href="jump/index.html" aria-label="Mappy Jump'ı oyna">`; her biri resmin kendi yarısını gösterir. Basınca o yarı %97.5'e küçülür + hafif parlar, 140 ms sonra sayfa açılır.
+- Sol altta müzik tuşu (`ik-muzik` / `ik-muzik-kapali`, `aria-pressed`), `muzik.mp3` ilk dokunuştan sonra, ayara göre. Sağ altta tam ekran (`ui-fullscreen`, dikey kilit).
+
+## Mappy Puzzle
+
 Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis fare var, fareler birbirine (çapraz dahil) değmez.
 
 ## Oynanış
@@ -36,7 +51,7 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - `playSound` `sfx` kapalıysa çalmaz; `vibrate()` `vibe` kapalıysa titremez.
 - Müzik: `Music` nesnesi, tek `Audio('muzik.mp3')`, döngü, ses .35. İlk dokunuşta başlar (tarayıcı kuralı), sayfa gizlenince durur, görünür olunca devam eder, reklam sırasında susar. Açma/kapama anında.
 - Her tuşa basışta `pop-1.mp3` (.5); karelerde 8 pop döngüsü; fare açılınca `ses-fare.mp3`.
-- Duraklat kartı (aynı satır düzeni): `ik-oynat` Devam et, `ik-ev` Ana sayfa (şimdilik bölümü baştan başlatır, `// TODO: ana menü`). Kazandın kartında `ik-kupa`. Can bitti kartında `ik-reklam` + `ik-yeniden`.
+- Duraklat kartı (aynı satır düzeni): `ik-oynat` Devam et, `ik-ev` Ana sayfa (→ `index.html`, açılış menüsü). Kazandın kartında `ik-kupa`. Can bitti kartında `ik-reklam` + `ik-yeniden`.
 
 ## Reklam katmanı (`Ads`)
 - Gerçek SDK yok; `Ads.provider` = `SimAdProvider` (2 sn "Reklam" kartı + çubuk). SDK gelince yalnızca `provider` değişir: `showRewarded(cb, failCb)`, `showInterstitial(cb)`, `showBanner()`, `hideBanner()` (`// TODO: AdMob (Android) / AdSense H5 (web)`).
@@ -53,3 +68,80 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - Henüz kullanılmayan (bölüm haritası / günlük hediye için): `ik-kilit`, `ik-tik`, `ik-bolum-kare`, `ik-hediye`.
 - Sesler: `muzik.mp3` (arka plan döngüsü), `pop-1..8.mp3` (pati sesleri, sırayla döner), `ses-fare.mp3` (fare açılma).
 - Tema: pastel (2026-11-18). Çerçeve: farenin halkası renginde açık lila-gri kenar, iç zemin (`.well`) farenin deliğinde arkasındaki açık tondan (~#3f3640) biraz aydınlık: yumuşak radyal #4a4152 (orta) → #3b3341 (kenar), üstte hafif iç gölge.
+
+## Mappy Jump (`jump/index.html`, dikey, sonsuz)
+Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir. Düşüp ekranın altından çıkarsa oyun biter.
+
+### Kontroller
+- Sol / sağ alt köşede büyük yuvarlak pastel tuşlar (SVG ok; PC'de de görünür). Ekranın sol / sağ yarısına basılı tutmak da yön verir (çoklu dokunuş). Klavye: ← → ve A / D. Esc / P duraklatır.
+- Yatay: ivme 32 b/sn², en çok 5.5 b/sn, ters yöne dönüşte ivme ×1.8, tuş yokken sürtünme 20 b/sn². İpte dururken hız birikir, fırlayınca taşınır. Ekran kenarında durur (karşıya geçme yok).
+
+### Ölçek ve döngü
+- 1 birim = ekran yüksekliği / 10 (her ekranda aynı oynanış). Skor metre = birim.
+- Oyun sütunu: en çok yükseklik × 0.62 geniş, geniş ekranda ortada (dışı hafif koyu). Telefonda tam ekran genişliği.
+- Tuval DPR'ye göre (en çok 2.5), requestAnimationFrame + sabit fizik adımı 1/120 sn. Sayfa gizlenince Duraklat kartı açılır.
+
+### Fare (`fare.webp`, 6×2, kare 202×256, 130 ms)
+- Çizim yüksekliği 1.3 birim, ayak yarı genişliği (yakalama) 0.2.
+- Kare seçimi: girişte ve ipte beklerken 0; ipe değince 0–2 (çömelme, 130 ms); yükselirken 3–6 (hıza göre); düşerken 7–11. Sola giderken yatay çevrilir.
+
+### İp (`ip.webp`, 6×2, kare 360×130, 110 ms)
+- Çizim yüksekliği 0.72 birim (kalınlık hep aynı); 3 parçalı çizim: 24 px'lik altın uçlar sabit, orta kısım ipin genişliğine uzar/kısalır. İpin üst yüzeyi karede y = 12 px.
+- Çökme (ortada, px): 0, 16, 45, 73, 85, 64, 45, 30, 16, 7, 1, 0. Fare ipe inince animasyon bir kez oynar, fare çökmeyle aşağı iner (kenara yakın indiyse daha az: 1 − (2dx/w)², en az 0.25), 0.66 sn sonra (6. kare, ip geri yaylanırken) fırlar. Boşta ip düz (kare 0).
+- Tek yönlü çarpışma: yalnızca düşerken ve ayaklar ipin çizgisini yukarıdan geçerken yakalar; alttan geçerken çarpmaz.
+- Zıplama tepesi: ipin çizgisinin 3.15 birim üstü (yerçekimi 22 b/sn²; fırlama hızı buna göre hesaplanır). İlk aralık 2.2 → 0.95 birim pay.
+
+### Kamera
+- Yalnızca yukarı: son inilen ip ekranın altından 2.2 birim yukarıda kalacak şekilde yumuşak kayar. Farenin tepesi ekranın altına inerse 0.35 sn sonra oyun biter.
+
+### İplerin yıpranması
+- İlk ip (başlangıç, 2.4 birim) hiç kopmaz, hep mavi.
+- Diğer iplerin hak sayısı (budget) var. Her inişten sonra renk basamağı = round(5 × iniş / budget): 0 mavi, 1 turkuaz, 2 yeşil, 3 sarı, 4 turuncu, 5 kırmızı (son izinli iniş kırmızı yapar). Renk değişince kısa beyaz parlama + küçük parçacık.
+  - budget 5: turkuaz, yeşil, sarı, turuncu, kırmızı · 4: turkuaz, sarı, turuncu, kırmızı · 3: yeşil, sarı, kırmızı · 2: sarı, kırmızı.
+- Kırmızıyken iniş: ip ortadan kopar (iki yarı dönerek düşer ve solar, parçacık patlaması, `pop-1` sesi, titreşim 80 ms), fare içinden düşer.
+- Çürük ip (budget 1, yalnızca 600 m üstü, %50): ilk inişte zıplatır, kırmızı olur ve fare fırlarken kopar (tekrar konulamaz).
+- Renkler yüklemede sprite sayfasının 6 boyalı kopyası olarak hazırlanır: piksel piksel HSL, yalnızca mavi ip pikselleri (ton 165–262, doygunluk ≥ 0.22) yeni tona taşınır; altın uçlar kalır. Hedef tonlar: 176, 122, 52 (açık), 28, 0 (doygun). Piksel okunamazsa (file://) `hue-rotate` yedeği (uçlar da boyanır).
+
+### Zorluk (ipin yüksekliğine göre)
+| Bölge | Yükseklik | Hak | Aralık | İp genişliği | Yan kayma (merkezden) | Kayan ip | Kayma hızı |
+|---|---|---|---|---|---|---|---|
+| 1 sabah | 0–60 m | 5 | 2.20 | 2.00 | 0.6–1.4 | – | – |
+| 2 ikindi | 60–150 | 4 | 2.35 | 1.85 | 0.9–1.8 | %15 | 0.5 b/sn |
+| 3 gün batımı | 150–270 | 3 | 2.50 | 1.70 | 1.2–2.2 | %30 | 0.7 |
+| 4 alacakaranlık | 270–420 | 2 | 2.60 | 1.55 | 1.4–2.4 | %45 | 0.9 |
+| 5 gece | 420–600 | 2 | 2.70 | 1.40 | 1.6–2.6 | %60 | 1.1 |
+| 6 uzay | 600+ | 2 (%50'si 1 = çürük) | 2.75 | 1.30 | 1.7–2.7 | %70 | 1.3 |
+- Aralık, genişlik, yan kayma ve kayma hızı bir sonraki bölgeye doğru yumuşakça artar; hak bölge sınırında düşer.
+- Kayan ipler: genlik 0.45–0.85 birim (ekrana sığdırılır), sinüs.
+- Adalet: en kötü durumda gereken yatay yol (yan kayma + iki ipin kayma genlikleri − ipin yarısı) ≤ 2.9 birim. Havada kalma ≥ 0.75 sn, 5.5 b/sn ile ~3.6 birim gidilir → her ip ulaşılabilir. Başsız deneme: kusursuz bot 900 sn oyunda (1708 m) hiç düşmedi.
+
+### Gökyüzü
+- Dikey renk geçişi + birkaç yumuşak tuval bulutu (kameranın 0.3 katı hızla parallaks, yavaş yatay kayma) + yıldızlar (gece / uzayda kıpırdar).
+- Bölgeler zorluk sınırlarında (60/150/270/420/600 m, ±15 m'de yumuşak geçiş): sabah mavisi → ikindi → gün batımı pembe/turuncu → alacakaranlık moru → yıldızlı gece → uzay laciverti. Bulutlar gece soluklaşır.
+
+### Giriş
+- Önce "Başlamak için dokun" kaplaması (ses kilidi açılır). Sonra fare ilk ipte 0. karede durur, `baslangic.mp3` (~4.2 sn) çalar; bitince (ya da 4.5 sn sonra, ses kapalı / engelliyse hemen) zıplama başlar ve müzik girer.
+- "Tekrar oyna" / "Yeniden başla"da giriş sesi yok: 0.7 sn bekleyip başlar.
+
+### Sesler
+- `ziplama-1/2/3.mp3` her fırlayışta sırayla (1, 2, 3, 1 …), Ses ayarına uyar. Müzik `../muzik.mp3` döngü (.35) yalnızca oyun akarken; kartlarda, reklamda ve sayfa gizliyken susar. Tuşlarda `../pop-1.mp3`.
+
+### HUD
+- Üst orta: skor (`../rakam-*`, 46u) + "m"; altında "EN İYİ" hapı (20u rakam). Sol üst: Ayarlar (Müzik / Ses / Titreşim, kendi kaydı) ve Duraklat (Devam et / Yeniden başla / Ana sayfa → `../index.html`). Sağ üst: tam ekran (dikey kilit).
+- Skor = inilen en yüksek ipin yüksekliği (yuvarlanmış metre). En iyi kaydedilir.
+
+### Oyun bitti kartı
+- "Düştün!", yeni rekorsa "Yeni rekor!" + parıltı, SKOR ve EN İYİ (rakam resimleri).
+- `ik-reklam` "Reklam izle, devam et" (ödüllü, oyun başına 1 kez): ekranın alt kısmında (görünen bir sonraki ipin bir aralık altında) taze bir ip (en az 1.8 birim, hak en az 2), fare üstünde, 0.8 sn sonra zıplar; yakındaki eski ipler silinir.
+- "Ana sayfa" (mor) ve "Tekrar oyna" (altın).
+
+### Reklam (`Ads`, jump'a ait)
+- `SimAdProvider` (2 sn "Reklam" kartı), aynı `// TODO: AdMob (Android) / AdSense H5 (web)` notu. `Ads.rewarded('devam', …)`.
+- Geçiş reklamı "Tekrar oyna"ya basınca: yalnızca toplam oyun bitişi > 2 (ilk 2 oyunda hiç), son reklamdan beri ≥ 3 oyun bitişi ve ≥ 3 dk. Sayaçlar kayıtta: `runs`, `goSince`, `adLastAt`, `counters.interstitialShown / rewardedOffered / rewardedWatched`.
+
+### Diğer
+- `prefers-reduced-motion`: daha az parçacık, yıldız kıpırtısı ve bulut kayması yok, kart animasyonları yok.
+- Kayıt `mappyJump.v1`: `music`, `sfx`, `vibe`, `best`, sayaçlar.
+
+### Jump dosyaları
+- `jump/fare.webp`, `jump/ip.webp`, `jump/baslangic.mp3`, `jump/ziplama-1..3.mp3`. Kökten: `ui-pause`, `ui-ayar`, `ui-fullscreen`, `ui-kart`, `ui-btn-altin`, `ui-btn-mor`, `ui-parilti`, `ik-*`, `rakam-*`, `muzik.mp3`, `pop-1.mp3`.
