@@ -22,7 +22,7 @@
 - Yükleme: yumuşak zemin, menü resminin soluk gri kopyası; renkli resim soldan sağa açılır, en altta ince ilerleme çizgisi (5u). İlerleme = gerçek yükleme: önce `menu.webp`, sonra iki oyunun ana dosyaları (puzzle kare/pati/ui/ik/rakam resimleri, fare sprite'ları, `muzik.mp3`, `pop-1`, `ses-fare`; jump `fare.webp`, `ip.webp`, `baslangic.mp3`, `muzik-jump.mp3`, `ziplama-1..3.mp3`). Resimler `new Image()`, mp3'ler `fetch` ile; hata / 8 sn zaman aşımı da "bitti" sayılır. En az 1.2 sn sürer.
 - Menü: resim ekranı doldurur. Dik ekranda (en/boy ≤ 0.75) cover, ama yanlardan en çok 22 px (kaynak) kesilir ki logolar kesilmesin; kalan üst/alt şerit aynı resmin bulanık açık kopyasıyla dolar. Geniş ekranda contain + aynı bulanık zemin. Hiç germe yok.
 - Ayırıcının üstü tam genişlik `<a href="puzzle.html" aria-label="Mappy Puzzle'ı oyna">`, altı `<a href="jump/index.html" aria-label="Mappy Jump'ı oyna">`; her biri resmin kendi yarısını gösterir. Basınca o yarı %97.5'e küçülür + hafif parlar, 140 ms sonra sayfa açılır.
-- Sol altta müzik tuşu (`ik-muzik` / `ik-muzik-kapali`, `aria-pressed`), `muzik.mp3` ilk dokunuştan sonra, ayara göre. Sağ altta tam ekran (`ui-fullscreen`, dikey kilit).
+- Sol altta müzik tuşu (`ik-muzik` / `ik-muzik-kapali`, `aria-pressed`), `muzik.mp3` ilk dokunuştan sonra, ayara göre. Sağ altta tam ekran (`ui-fullscreen`, dikey kilit; Android uygulamasında yok).
 - Dil tuşu (`#lang`): `ik-bolum-kare.webp` (krem kare, altın kenar), ayırıcı çubuktaki yıldız rozetinin tam üstünde: resimde merkez (471, 865), genişlik 130 px (rozet kalkanı ~412–532 × 807–925); konum menünün aynı cover/contain ölçeğiyle hesaplanır, her ekranda rozette kalır. İçinde kalın koyu yazıyla dil kodu (TR, EN, 中文, HI, ES, FR, AR, BN, PT, RU, UR; yazı = tuş genişliği × 0.3). Her dokunuş sıradaki dile geçer, `mappyLang`'a yazar, aria-label'ları günceller ve üstte 1.4 sn küçük beyaz yuvarlak kartta dilin kendi adını gösterir (Türkçe, English, 中文, हिन्दी, Español, Français, العربية, বাংলা, Português, Русский, اردو). Tuş z-index 4, `pointerdown`/`click` yayılımını durdurur; alttaki oyun bağlantılarını tetiklemez.
 
 ## Mappy Puzzle
@@ -66,7 +66,7 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - Duraklat kartı (aynı satır düzeni): `ik-oynat` Devam et, `ik-ev` Ana sayfa (→ `index.html`, açılış menüsü). Kazandın kartında `ik-kupa`. Can bitti kartında `ik-reklam` + `ik-yeniden`.
 
 ## Reklam katmanı (`Ads`)
-- Gerçek SDK yok; `Ads.provider` = `SimAdProvider` (2 sn "Reklam" kartı + çubuk). SDK gelince yalnızca `provider` değişir: `showRewarded(cb, failCb)`, `showInterstitial(cb)`, `showBanner()`, `hideBanner()` (`// TODO: AdMob (Android) / AdSense H5 (web)`).
+- `Ads.provider`: Android uygulamasında `AdMobProvider` (gerçek AdMob, bkz. "Android / AdMob"), tarayıcıda `SimAdProvider` (2 sn "Reklam" kartı + çubuk). Sözleşme: `showRewarded(cb, failCb)`, `showInterstitial(cb)`, `showBanner()`, `hideBanner()`, (AdMob'da) `ready()`.
 - `Ads.rewarded(placement, onReward)`: yerler `can`, `ampul`, `buyutec`. Teklif tuşu ekrana gelince `rewardedOffered`, ödül verilince `rewardedWatched` artar. Reklam gelmezse "Reklam şu an yok" kartı.
 - `Ads.interstitialAfterLevel(level, then)`: "Sonraki bölüm"e basınca. Öğreticide, `noAds` oyuncuda ve bölüm 4'ten önce yok. O bölümde can bittiyse sonraki 1 (iki kez bittiyse 2) geçiş reklamsız (`adCalm`). Son reklamdan beri en az 3 dk ve en az N bölüm: C 3, B 4, A 5. Sayaç `interstitialShown`.
 - Profil (`profile`): D = `noAds`; 5 tekliften önce B; izleme oranı ≥%60 A, %20–60 B, <%20 C.
@@ -142,7 +142,7 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - `ziplama-1/2/3.mp3` her fırlayışta sırayla (1, 2, 3, 1 …), Ses ayarına uyar. Müzik `jump/muzik-jump.mp3` (13.75 sn, daha hızlı ve neşeli döngü; puzzle/launcher `muzik.mp3` kullanmaya devam eder) döngü (.35) yalnızca oyun akarken; kartlarda, reklamda ve sayfa gizliyken susar. Tuşlarda `../pop-1.mp3`.
 
 ### HUD
-- Üst orta: skor (`../rakam-*`, 46u) + "m"; altında "EN İYİ" hapı (20u rakam). Sol üst: Ayarlar (Müzik / Ses / Titreşim, kendi kaydı) ve Duraklat (Devam et / Yeniden başla / Ana sayfa → `../index.html`). Sağ üst: tam ekran (dikey kilit).
+- Üst orta: skor (`../rakam-*`, 46u) + "m"; altında "EN İYİ" hapı (20u rakam). Sol üst: Ayarlar (Müzik / Ses / Titreşim, kendi kaydı) ve Duraklat (Devam et / Yeniden başla / Ana sayfa → `../index.html`). Sağ üst: tam ekran (dikey kilit; Android uygulamasında yok).
 - Skor = inilen en yüksek ipin yüksekliği (yuvarlanmış metre). En iyi kaydedilir.
 
 ### Oyun bitti kartı
@@ -151,7 +151,7 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - "Ana sayfa" (mor) ve "Tekrar oyna" (altın).
 
 ### Reklam (`Ads`, jump'a ait)
-- `SimAdProvider` (2 sn "Reklam" kartı), aynı `// TODO: AdMob (Android) / AdSense H5 (web)` notu. `Ads.rewarded('devam', …)`.
+- Android'de `AdMobProvider`, tarayıcıda `SimAdProvider` (2 sn "Reklam" kartı). `Ads.rewarded('devam', …)`.
 - Geçiş reklamı "Tekrar oyna"ya basınca: yalnızca toplam oyun bitişi > 2 (ilk 2 oyunda hiç), son reklamdan beri ≥ 3 oyun bitişi ve ≥ 3 dk. Sayaçlar kayıtta: `runs`, `goSince`, `adLastAt`, `counters.interstitialShown / rewardedOffered / rewardedWatched`.
 
 ### Diğer
@@ -166,3 +166,17 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - Zorlaşma 2 kat hızlı: zorluk bölgeleri 0 / 30 / 75 / 135 / 210 / 300 m (eskisi 0/60/150/270/420/600). Son bölgede yan mesafe 475 m'ye kadar artar.
 - İp boyu her 9,5 m'de %1 küçülür, %50'ye ~475 m'de iner. Gökyüzü geçişleri aynı sınırlarda (±8 m).
 - En üstte banner reklam alanı (56u + çentik) her zaman ayrılı; HUD onun altında. Simülatör banner'ı 2. oyundan itibaren gösterir (`Ads.banner()`), reklamsız oyuncuya hiç.
+
+## Android / AdMob (2026-11-18)
+- Uygulama: Capacitor 8 + `@capacitor-community/admob` (^8.3.0), paket `com.air.Mappyjump`. Android derleme dosyaları (package.json, capacitor.config.json, .github/workflows, android-ayar/, assets/) ayrı yürütülüyor; AdMob uygulama kimliği manifestte.
+- Kimlikler (gerçek): uygulama `ca-app-pub-7983529419004158~5565061172` · banner `ca-app-pub-7983529419004158/1882667153` · geçiş `ca-app-pub-7983529419004158/9017221021` · ödüllü `ca-app-pub-7983529419004158/1625816161` (sayfalarda `ADMOB_IDS`).
+- Algılama: üç sayfanın `<head>`'indeki küçük betik `window.Capacitor.isNativePlatform()` doğruysa `<html class="native">` ekler; JS'te `IS_NATIVE`. Eklenti `window.Capacitor.Plugins.AdMob` (yoksa `Capacitor.registerPlugin('AdMob')`).
+- `html.native`: üç sayfada tam ekran tuşu gizli (`#fs`), tıklama kodu tam ekran istemez; uygulama yerelde immersive. Benzetici gri şeritler gizli. Tarayıcıda her şey eskisi gibi (tam ekran tuşu + `SimAdProvider`).
+- Launcher: reklam yok; açılınca `removeBanner()` (oyundan dönünce kalan banner kalkar).
+- Her oyun kendi `makeAdMobProvider(cfg)` kopyasını taşır (ortak JS yok). Açılış: önce `removeBanner()` (öbür oyunun banner'ı), `initialize({})` → `requestConsentInfo()`; `status === 'REQUIRED'` ve `isConsentFormAvailable` ise `showConsentForm()` → 1 geçiş (`prepareInterstitial({adId})`) + 1 ödüllü (`prepareRewardVideoAd({adId})`) ön yükleme. Gösterildikten / kapandıktan / hata verdikten sonra yeniden yüklenir; yükleme hatasında 15 → 30 → 60 → 120 sn arayla yeniden dener.
+- Ödüllü: `showRewardVideoAd()`. Ödül yalnızca `onRewardedVideoAdReward` olayı (ya da çözülen ödül) gelirse; `cb` reklam kapanınca (`onRewardedVideoAdDismissed`). Yüklü değilse, gösterilemezse ya da ödülsüz kapanırsa `failCb` → oyunun "Reklam şu an yok" kartı + yeniden yükleme.
+- Geçiş: `showInterstitial()`; kapanınca (`interstitialAdDismissed`) ya da hata / `interstitialAdFailedToShow` olunca oyun devam eder (`cb`). Yüklü reklam yoksa (`provider.ready()` yanlış) hiç bekletmez ve sayaçlara (`adLastAt`, `interstitialShown`, `goSince` / `adLevelsSince`) dokunmaz.
+- Yedek: kapanma olayı gelmezse sayfa yeniden görünür olunca 1.5 sn sonra oyun devam eder.
+- Banner: `showBanner({adId, adSize:'ADAPTIVE_BANNER', position, margin:0})` ilk kez, sonra `hideBanner()` / `resumeBanner()`; yüklenemezse (`bannerAdFailedToLoad`) bir sonraki istekte ya da bekleme sonrası yeniden. Puzzle `BOTTOM_CENTER` alt bant (`#adBand`, bölüm > 5), Jump `TOP_CENTER` üst bant (`#adTop`, 2. oyundan itibaren). `bannerAdSizeChanged` yüksekliği (dp = CSS px) `--adh` olarak yazılır: puzzle bandı = `--adh` (+ alt güvenli alan; `fitLayout` bu sabit px'i ölçekli bloktan ayrı hesaplar), jump bandı ve HUD (`--band`) = `--adh` + üst güvenli alan. Banner yokken bant 0.
+- Müzik tam ekran reklam boyunca susar (`Music.hold`), sonra devam eder. Tüm çağrılar try/catch + `.catch`; reklam hatası oyunu bozmaz.
+- Sıklık kuralları aynı (puzzle geçiş kuralları, profil, ödüllü +2 hak / can; jump ilk 2 oyunda geçiş yok, ≥3 oyun bitişi + 3 dk, oyun başına 1 ödüllü devam).

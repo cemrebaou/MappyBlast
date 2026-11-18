@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Android uygulaması mı (Capacitor)? Evetse <html class="native">: tam ekran tuşu yok, gerçek AdMob reklamı. */
+(function () { try { var C = window.Capacitor; if (C && C.isNativePlatform && C.isNativePlatform()) document.documentElement.className += ' native'; } catch (e) {} })();
+</script>
 <style>
 :root{
   --ink:#3a2a5e;
@@ -147,6 +151,12 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   .ad-bar i{animation:none}
   .steer,.ui-btn,.main-btn,.txt-btn,.row-btn img,.ad-btn img{transition:none}
 }
+
+/* Android uygulaması: tam ekran tuşu yok; üst bant = gerçek AdMob banner yüksekliği (--adh, bannerAdSizeChanged), gri benzetici şerit yok */
+html.native #fs{display:none!important}
+html.native .ad-top{height:calc(var(--adh,0px) + env(safe-area-inset-top,0px));padding-bottom:0}
+html.native .ad-top .sim{display:none!important}
+html.native .hud{--band:calc(var(--adh,0px) + env(safe-area-inset-top,0px))}
 </style>
 </head>
 <body>
@@ -179,6 +189,8 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 </div>
 
 <script>
+/* Android uygulaması (Capacitor): <head>'deki küçük betik <html>'e 'native' sınıfı ekler */
+var IS_NATIVE = /(^|\s)native(\s|$)/.test(document.documentElement.className);
 /* @@I18N-BEGIN — çeviriler (sıra: tr en zh hi es fr ar bn pt ru ur); doğrudan burada düzenlenebilir (yerel üretici: /home/claude/tools/i18n_gen.py) */
 var LANGS = ["tr", "en", "zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur"];
 var I18N = {
@@ -967,9 +979,159 @@ var SimAdProvider = {
   showBanner: function () { var b = document.getElementById('adTop'); if (b) b.classList.add('on'); },
   hideBanner: function () { var b = document.getElementById('adTop'); if (b) b.classList.remove('on'); }
 };
+/* ---------------------------------------------------------------------
+   Android (Capacitor 8 + @capacitor-community/admob): gerçek AdMob.
+   IS_NATIVE değilse (tarayıcı) SimAdProvider kalır. Aynı sözleşme:
+   showRewarded(cb, failCb), showInterstitial(cb), showBanner(), hideBanner(), ready().
+   Hiçbir reklam hatası oyunu durdurmaz: her çağrı try/catch + .catch.
+   --------------------------------------------------------------------- */
+var ADMOB_IDS = {
+  banner: 'ca-app-pub-7983529419004158/1882667153',
+  interstitial: 'ca-app-pub-7983529419004158/9017221021',
+  rewarded: 'ca-app-pub-7983529419004158/1625816161'
+};
+function makeAdMobProvider(cfg) {
+  var A = null;
+  try {
+    var C = window.Capacitor;
+    A = (C && C.Plugins && C.Plugins.AdMob) || (C && C.registerPlugin ? C.registerPlugin('AdMob') : null);
+  } catch (e) { A = null; }
+  var st = { started: false, intReady: false, intLoading: false, rewReady: false, rewLoading: false,
+             bWant: false, bOn: false, bMade: false, full: null };
+  var tries = { int: 0, rew: 0, ban: 0 }, timers = { int: 0, rew: 0, ban: 0 };
+  function noop() {}
+  /* eklenti çağrısı her zaman Promise döner, hiç fırlatmaz */
+  function call(name, arg) {
+    try {
+      if (!A || typeof A[name] !== 'function') return Promise.reject(new Error('AdMob.' + name + ' yok'));
+      var p = arg === undefined ? A[name]() : A[name](arg);
+      return p && typeof p.then === 'function' ? p : Promise.resolve(p);
+    } catch (e) { return Promise.reject(e); }
+  }
+  function on(ev, fn) {
+    try {
+      if (!A || typeof A.addListener !== 'function') return;
+      var r = A.addListener(ev, function (d) { try { fn(d || {}); } catch (e) {} });
+      if (r && typeof r.catch === 'function') r.catch(noop);
+    } catch (e) {}
+  }
+  function setSize(h) { try { cfg.onSize(h > 0 ? h : 0); } catch (e) {} }
+  /* yükleme hatasında artan bekleme ile yeniden dene: 15, 30, 60, 120 sn */
+  function retry(kind, fn) {
+    clearTimeout(timers[kind]);
+    var ms = Math.min(120000, 15000 * Math.pow(2, Math.min(3, tries[kind]++)));
+    timers[kind] = setTimeout(fn, ms);
+  }
+  function loadInt() {
+    if (!st.started || st.intReady || st.intLoading) return;
+    st.intLoading = true;
+    call('prepareInterstitial', { adId: ADMOB_IDS.interstitial }).then(function () {
+      st.intLoading = false; st.intReady = true; tries.int = 0;
+    }, function () { st.intLoading = false; st.intReady = false; retry('int', loadInt); });
+  }
+  function loadRew() {
+    if (!st.started || st.rewReady || st.rewLoading) return;
+    st.rewLoading = true;
+    call('prepareRewardVideoAd', { adId: ADMOB_IDS.rewarded }).then(function () {
+      st.rewLoading = false; st.rewReady = true; tries.rew = 0;
+    }, function () { st.rewLoading = false; st.rewReady = false; retry('rew', loadRew); });
+  }
+  /* banner: ilk kez showBanner, sonra hideBanner / resumeBanner */
+  function syncBanner() {
+    if (!st.started) return;
+    if (st.bWant && !st.bOn) {
+      st.bOn = true;
+      if (st.bMade) {
+        call('resumeBanner').catch(function () { st.bMade = false; st.bOn = false; });
+      } else {
+        st.bMade = true;
+        call('showBanner', { adId: ADMOB_IDS.banner, adSize: 'ADAPTIVE_BANNER', position: cfg.position, margin: 0 })
+          .catch(function () { st.bMade = false; st.bOn = false; setSize(0); retry('ban', syncBanner); });
+      }
+    } else if (!st.bWant && st.bOn) {
+      st.bOn = false;
+      setSize(0);
+      if (st.bMade) call('hideBanner').catch(noop);
+    }
+  }
+  /* tam ekran reklam bitti (kapandı / gösterilemedi) */
+  function endFull() { var f = st.full; if (f) f.end(); }
+
+  on('bannerAdSizeChanged', function (d) { setSize(st.bOn ? (+d.height || 0) : 0); });
+  on('bannerAdFailedToLoad', function () {
+    st.bMade = false; st.bOn = false; setSize(0);
+    retry('ban', syncBanner);
+  });
+  on('interstitialAdDismissed', function () { if (st.full && st.full.kind === 'int') endFull(); });
+  on('interstitialAdFailedToShow', function () { if (st.full && st.full.kind === 'int') endFull(); });
+  on('onRewardedVideoAdReward', function () { if (st.full && st.full.kind === 'rew') st.full.earned = true; });
+  on('onRewardedVideoAdDismissed', function () { if (st.full && st.full.kind === 'rew') endFull(); });
+  on('onRewardedVideoAdFailedToShow', function () { if (st.full && st.full.kind === 'rew') endFull(); });
+  /* yedek: reklam kapanma olayı hiç gelmezse, sayfa yeniden görününce 1.5 sn sonra oyuna dön */
+  document.addEventListener('visibilitychange', function () {
+    var f = st.full;
+    if (!f) return;
+    if (document.hidden) { f.wasHidden = true; return; }
+    if (f.wasHidden) setTimeout(function () { if (st.full === f) endFull(); }, 1500);
+  });
+
+  return {
+    start: function () {
+      if (!A) return;
+      /* önceki sayfadan (öbür oyun) kalan banner'ı kaldır */
+      call('removeBanner').catch(noop);
+      call('initialize', {}).catch(noop).then(function () {
+        return call('requestConsentInfo').then(function (info) {
+          if (info && info.status === 'REQUIRED' && info.isConsentFormAvailable) return call('showConsentForm');
+        });
+      }).catch(noop).then(function () {
+        st.started = true;
+        loadInt(); loadRew(); syncBanner();
+      });
+    },
+    ready: function () { return st.started && st.intReady && !st.full; },
+    showRewarded: function (cb, failCb) {
+      if (!st.started || !st.rewReady || st.full) { loadRew(); failCb(); return; }
+      var f = { kind: 'rew', earned: false, done: false, wasHidden: false };
+      f.end = function () {
+        if (f.done) return;
+        f.done = true;
+        if (st.full === f) st.full = null;
+        st.rewReady = false; loadRew();
+        try { if (f.earned) cb(); else failCb(); } catch (e) {}
+      };
+      st.full = f;
+      st.rewReady = false;
+      /* ödül olayı (ya da çözülen ödül) gelirse kazanılır; oyun kapanınca devam eder */
+      call('showRewardVideoAd').then(function (item) { f.earned = true; }, function () { f.end(); });
+    },
+    showInterstitial: function (cb) {
+      if (!st.started || !st.intReady || st.full) { loadInt(); cb(); return; }
+      var f = { kind: 'int', done: false, wasHidden: false };
+      f.end = function () {
+        if (f.done) return;
+        f.done = true;
+        if (st.full === f) st.full = null;
+        st.intReady = false; loadInt();
+        try { cb(); } catch (e) {}
+      };
+      st.full = f;
+      st.intReady = false;
+      call('showInterstitial').catch(function () { f.end(); });
+    },
+    showBanner: function () { st.bWant = true; syncBanner(); },
+    hideBanner: function () { st.bWant = false; syncBanner(); }
+  };
+}
+/* Jump: üstteki bant (#adTop), banner TOP_CENTER; bant ve HUD (--band) yüksekliği = gerçek banner yüksekliği (CSS px = dp) */
+var AdMobProvider = IS_NATIVE ? makeAdMobProvider({
+  position: 'TOP_CENTER',
+  onSize: function (h) { document.documentElement.style.setProperty('--adh', h + 'px'); }
+}) : null;
+
 var Ads = {
-  // TODO: AdMob (Android) / AdSense H5 (web) sağlayıcısı buraya
-  provider: SimAdProvider,
+  /* Android uygulamasında AdMob, tarayıcıda benzetici (AdSense H5 henüz yok) */
+  provider: AdMobProvider || SimAdProvider,
   busy: false,
   offered: function () { P.counters.rewardedOffered++; save(); },
   rewarded: function (placement, onReward, onFail) {
@@ -987,12 +1149,16 @@ var Ads = {
   /* "Tekrar oyna"ya basınca: en az 3 oyun bitişi ve 3 dk arayla, ilk 2 oyunda hiç */
   interstitialAfterGameOver: function (then) {
     var show = !Ads.busy && P.runs > AD_FIRST_RUNS && P.goSince >= AD_EVERY && (!P.adLastAt || Date.now() - P.adLastAt >= AD_MIN_MS);
+    /* gerçek reklam yüklü değilse sayaçlara dokunmadan geç (oyunu bekletme) */
+    if (show && Ads.provider.ready && !Ads.provider.ready()) show = false;
     if (!show) { then(); return; }
     Ads.busy = true; Music.hold(true);
     P.adLastAt = Date.now(); P.goSince = 0; P.counters.interstitialShown++; save();
     Ads.provider.showInterstitial(function () { Ads.busy = false; Music.hold(false); then(); });
   }
 };
+/* Android: AdMob başlat (initialize → izin formu → 1 geçiş + 1 ödüllü ön yükleme); hata oyunu etkilemez */
+if (AdMobProvider) { try { AdMobProvider.start(); } catch (e) {} }
 
 /* =====================================================================
    KARTLAR
@@ -1165,6 +1331,7 @@ document.addEventListener('visibilitychange', function () {
 
 /* tam ekran (dikey kalır) */
 $('fs').addEventListener('click', function () {
+  if (IS_NATIVE) return;   /* Android: tuş gizli, tam ekran isteği yok */
   try {
     if (document.fullscreenElement) { document.exitFullscreen(); return; }
     var p = document.documentElement.requestFullscreen();

@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<script>
+/* Android uygulaması mı (Capacitor)? Evetse <html class="native">: tam ekran tuşu yok, gerçek AdMob reklamı. */
+(function () { try { var C = window.Capacitor; if (C && C.isNativePlatform && C.isNativePlatform()) document.documentElement.className += ' native'; } catch (e) {} })();
+</script>
 <style>
 :root{
   --u:max(min(100vw / 390, 100vh / 844), min(1px, 100vw / 360));
@@ -67,6 +71,9 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){
   .half img,.bg,.ghost,.ui-btn,.bar,.lang-btn,.toast{transition:none}
 }
+
+/* Android uygulaması: tam ekran tuşu yok (uygulama kendisi tam ekran) */
+html.native #fs{display:none!important}
 </style>
 </head>
 <body>
@@ -83,6 +90,8 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+/* Android uygulaması (Capacitor): <head>'deki küçük betik <html>'e 'native' sınıfı ekler */
+var IS_NATIVE = /(^|\s)native(\s|$)/.test(document.documentElement.className);
 /* @@I18N-BEGIN — çeviriler (sıra: tr en zh hi es fr ar bn pt ru ur); doğrudan burada düzenlenebilir (yerel üretici: /home/claude/tools/i18n_gen.py) */
 var LANGS = ["tr", "en", "zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur"];
 var I18N = {
@@ -360,8 +369,17 @@ function toast(text) {
 })();
 applyTexts();
 
+/* ---------- Android: launcher'da reklam yok; oyundan geri dönülünce o oyunun banner'ı kaldırılır ---------- */
+if (IS_NATIVE) {
+  try {
+    var AdMobL = window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+    if (AdMobL && AdMobL.removeBanner) { var rb = AdMobL.removeBanner(); if (rb && rb.catch) rb.catch(function () {}); }
+  } catch (e) {}
+}
+
 /* ---------- tam ekran (dikey kalır) ---------- */
 $('fs').addEventListener('click', function () {
+  if (IS_NATIVE) return;   /* Android: tuş gizli, tam ekran isteği yok */
   try {
     if (document.fullscreenElement) { document.exitFullscreen(); return; }
     var p = document.documentElement.requestFullscreen();
