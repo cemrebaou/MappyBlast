@@ -9,6 +9,16 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - 3 can (kalp paneli). Can bitince ödüllü reklam = canlar dolar (`Ads.rewarded('can')`).
 - Ampul (5 hak): fare olamayacak en fazla 5 kareyi patiler. Büyüteç (3 hak): bir fareyi açar. Hak bitince reklam +2.
 
+## Ekran yerleşimi (yukarıdan aşağı, 360×740'ta kaydırmasız)
+- Üst çubuk: sol üstte `ui-ayar` + sağında `ui-pause`, ayarların altında `ik-yeniden` (40 px). Ortada bölüm plakası + yıldızlar, sağ üstte para paneli.
+- Gösterge sırası: can paneli, süre, bulunan/N sayacı. Öğreticide gizli; öğretici yazı kutusu (ve bölüm 1 kural balonu) bu sıranın yerinde durur.
+- Kural şeridi: beyaz yuvarlak şerit, 3 küçük kart (12 px kare/pati/fare ile 3×3 mini resim + yazı): "Her renkte 1 fare", "Her satır ve sütunda 1 fare", "Fareler birbirine değmez". Öğreticide de görünür.
+- Bölge sekmesi: çerçevenin üst kenarına yapışık, çerçeve renginde sekme (`#regTab`, `role="img"`, "Bulunan fareler: x / N"). Her bölge için sırayla mini kare (düz `kare-N` + `fare-cikis` 0. kare = boş delik), boyu tablo karesinin yarısı. O bölgenin faresi bulununca aynı sprite oynatıcıyla (`startPet`) çıkış → idle. Her bölüm başında / baştan başlatınca yeniden kurulur.
+- Tablo: kalan yüksekliğe sığar (`.play` boy kabı; genişlik = (yükseklik − 92 px) / (1.018 + 0.454/N)).
+- Yardım çubuğu: ampul + büyüteç (72 px, arası 20 px), tablonun 14 px altında; grup dikeyde ortalanır.
+- En altta 60 px reklam bandı (`#adBand`). Tam ekran tuşu (44 px) sağ altta bandın hemen üstünde.
+- Banner: `Ads.banner()` bölüm başında; yalnızca bölüm > 5, `noAds` değil, öğretici değil. `Ads.provider.showBanner()` / `hideBanner()`; benzetici bantta 50 px açık gri "Reklam" şeridi çizer. Bölüm 6'dan önce bant boş durur.
+
 ## Bölüm sistemi
 - Bölümler oyun içinde üretiliyor (tohumlu RNG), hep tek çözümlü ve tahminsiz çözülebilir.
 - Tablo: 1–3 → 4×4, 4–7 → 5×5, 8–13 → 6×6, 14–22 → 7×7, sonrası 8×8 (8 renk kare olduğu için şimdilik tavan).
@@ -17,7 +27,7 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - Kayıt: localStorage `fareBulmaca.v1`.
 
 ## Ayarlar & sesler
-- Sol üstte `ui-ayar` tuşu (yeniden başlat/duraklat yanında, sığmazsa alt satıra kayar). Tam ekran sağ üstte paranın altında kalır.
+- Sol üstte `ui-ayar` tuşu (bkz. Ekran yerleşimi).
 - "Ayarlar" kartı: dikey satır listesi (200 px sütun, simge 56 px solda, yazı 20 px sağda). Müzik / Ses / Titreşim, her biri `aria-pressed` satır tuşu (açık/kapalı simge + yazı + "Açık"/"Kapalı"), son satır `ik-kapat` "Kapat". Kayıtta `music`, `sfx`, `vibe` (varsayılan hepsi açık). Kart açıkken süre durur.
 - `playSound` `sfx` kapalıysa çalmaz; `vibrate()` `vibe` kapalıysa titremez.
 - Müzik: `Music` nesnesi, tek `Audio('muzik.mp3')`, döngü, ses .35. İlk dokunuşta başlar (tarayıcı kuralı), sayfa gizlenince durur, görünür olunca devam eder, reklam sırasında susar. Açma/kapama anında.
@@ -25,7 +35,7 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - Duraklat kartı (aynı satır düzeni): `ik-oynat` Devam et, `ik-ev` Ana sayfa (şimdilik bölümü baştan başlatır, `// TODO: ana menü`). Kazandın kartında `ik-kupa`. Can bitti kartında `ik-reklam` + `ik-yeniden`.
 
 ## Reklam katmanı (`Ads`)
-- Gerçek SDK yok; `Ads.provider` = `SimAdProvider` (2 sn "Reklam" kartı + çubuk). SDK gelince yalnızca `provider` değişir: `showRewarded(cb, failCb)`, `showInterstitial(cb)` (`// TODO: AdMob (Android) / AdSense H5 (web)`).
+- Gerçek SDK yok; `Ads.provider` = `SimAdProvider` (2 sn "Reklam" kartı + çubuk). SDK gelince yalnızca `provider` değişir: `showRewarded(cb, failCb)`, `showInterstitial(cb)`, `showBanner()`, `hideBanner()` (`// TODO: AdMob (Android) / AdSense H5 (web)`).
 - `Ads.rewarded(placement, onReward)`: yerler `can`, `ampul`, `buyutec`. Teklif tuşu ekrana gelince `rewardedOffered`, ödül verilince `rewardedWatched` artar. Reklam gelmezse "Reklam şu an yok" kartı.
 - `Ads.interstitialAfterLevel(level, then)`: "Sonraki bölüm"e basınca. Öğreticide, `noAds` oyuncuda ve bölüm 4'ten önce yok. O bölümde can bittiyse sonraki 1 (iki kez bittiyse 2) geçiş reklamsız (`adCalm`). Son reklamdan beri en az 3 dk ve en az N bölüm: C 3, B 4, A 5. Sayaç `interstitialShown`.
 - Profil (`profile`): D = `noAds`; 5 tekliften önce B; izleme oranı ≥%60 A, %20–60 B, <%20 C.
