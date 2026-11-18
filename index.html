@@ -159,16 +159,16 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 }
 
 /* ---------- Alt tuşlar: ampul (ipucu) + büyüteç ---------- */
-.tools{display:flex;justify-content:center;align-items:flex-end;gap:18px;padding-bottom:6px}
+.tools{display:flex;justify-content:center;align-items:flex-end;gap:28px;padding-bottom:6px}
 .img-btn{
-  position:relative;border:0;padding:0;margin:0;background:none;line-height:0;border-radius:24px;
+  position:relative;border:0;padding:0;margin:0;background:none;line-height:0;border-radius:50%;
   transition:transform .1s,opacity .2s,filter .2s;
 }
-.img-btn img{display:block;height:78px;width:auto;max-width:100%}
+.img-btn img{display:block;width:76px;height:76px}
 .img-btn:active:not(:disabled){transform:translateY(2px) scale(.97)}
 .img-btn:disabled{opacity:.55;filter:grayscale(.35)}
 .badge{
-  position:absolute;top:-10px;right:-8px;min-width:34px;height:34px;padding:0 6px;
+  position:absolute;top:-6px;right:-10px;min-width:34px;height:34px;padding:0 6px;
   display:flex;align-items:center;justify-content:center;line-height:0;
   background:url(ui-rozet.webp) center/100% 100% no-repeat;
 }
@@ -197,9 +197,24 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .card p b{color:#3a1d7a;font-weight:800}
 .card .acts{display:flex;flex-direction:column;align-items:center;gap:10px}
 .ad-btn{border:0;padding:4px;margin:0;background:none;border-radius:22px;display:flex;flex-direction:column;align-items:center;gap:6px}
-.ad-btn img{display:block;height:96px;width:auto;max-width:100%}
-.ad-btn .cap{font-size:18px;font-weight:800;color:var(--ink)}
-.ad-btn:active img{transform:scale(.97)}
+.ad-btn img{display:block;width:72px;height:72px;border-radius:50%;transition:transform .1s}
+.ad-btn .cap{font-size:18px;font-weight:800;line-height:1.15;color:var(--ink);max-width:11em}
+.ad-btn:active img{transform:scale(.94)}
+/* yuvarlak simge tuşları (duraklat / ayarlar / can bitti kartı) */
+.icon-row{display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;gap:10px 16px}
+.ic-btn{border:0;padding:4px;margin:0;background:none;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:72px}
+.ic-btn img{display:block;width:60px;height:60px;border-radius:50%;transition:transform .1s}
+.ic-btn .cap{font-size:15px;font-weight:800;line-height:1.1;color:var(--ink)}
+.ic-btn:active img{transform:scale(.92)}
+.ic-btn.close-x img{width:52px;height:52px}
+.card .close-row{display:flex;justify-content:center;margin-top:10px}
+/* kazandın kartı: kupa */
+.win-cup{display:block;height:54px;width:auto;margin:0 auto 4px}
+/* yerleşik reklam kartı (SDK yokken) */
+.ad-bar{width:80%;height:12px;margin:10px auto 2px;border-radius:6px;background:#e6d9f3;overflow:hidden}
+.ad-bar i{display:block;width:100%;height:100%;border-radius:6px;background:#7a4fc8;transform-origin:left center;animation:adBar 2s linear both}
+@keyframes adBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.card:focus{outline:none}
 .main-btn,.txt-btn{
   min-width:170px;height:52px;border:0;border-radius:26px;padding:3px 26px 0;
   font-size:20px;font-weight:800;
@@ -265,7 +280,8 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   .tile.pop,.tile.shake,.card,.sparkle,.tut-box{animation:none}
   .tut-hand{animation:none}
   .cell.glow::after{animation:none;opacity:1}
-  .img-btn,.ui-btn,.main-btn,.txt-btn{transition:none}
+  .img-btn,.ui-btn,.main-btn,.txt-btn,.ad-btn img,.ic-btn img{transition:none}
+  .ad-bar i{animation:none}
 }
 </style>
 </head>
@@ -278,10 +294,13 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   <header class="top">
     <div class="top-left">
       <button class="ui-btn" type="button" id="back" aria-label="Geri">
-        <img src="ui-geri.webp" width="124" height="128" alt="">
+        <img src="ui-geri.webp" width="129" height="128" alt="">
       </button>
       <button class="ui-btn" type="button" id="pause" aria-label="Duraklat">
-        <img src="ui-pause.webp" width="124" height="128" alt="">
+        <img src="ui-pause.webp" width="129" height="128" alt="">
+      </button>
+      <button class="ui-btn" type="button" id="settings" aria-label="Ayarlar">
+        <img src="ui-ayar.webp" width="129" height="128" alt="">
       </button>
     </div>
 
@@ -306,9 +325,9 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 
   <section class="stats" aria-label="Göstergeler">
     <div class="lives panel" id="lives" role="img" aria-label="Kalan can: 3 / 3">
-      <img src="kalp-dolu.webp" width="111" height="96" alt="">
-      <img src="kalp-dolu.webp" width="111" height="96" alt="">
-      <img src="kalp-dolu.webp" width="111" height="96" alt="">
+      <img src="kalp-dolu.webp" width="113" height="96" alt="">
+      <img src="kalp-dolu.webp" width="113" height="96" alt="">
+      <img src="kalp-dolu.webp" width="113" height="96" alt="">
     </div>
     <div class="plate panel">
       <img class="ico" src="ui-saat.webp" width="79" height="96" alt="">
@@ -334,11 +353,11 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 
   <footer class="tools">
     <button class="img-btn" type="button" id="btnHint" aria-label="İpucu: fare olamayacak kareleri işaretle">
-      <img src="btn-ampul.webp" width="348" height="220" alt="">
+      <img src="ik-ampul.webp" width="159" height="160" alt="">
       <span class="badge" id="badgeHint" aria-hidden="true"></span>
     </button>
     <button class="img-btn" type="button" id="btnGlass" aria-label="Büyüteç: bir fareyi göster">
-      <img src="btn-buyutec.webp" width="335" height="220" alt="">
+      <img src="ik-buyutec.webp" width="161" height="160" alt="">
       <span class="badge" id="badgeGlass" aria-hidden="true"></span>
     </button>
   </footer>
@@ -346,7 +365,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 </main>
 
 <div class="overlay" id="overlay" hidden>
-  <div class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="ovTitle"></div>
+  <div class="card" id="card" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ovTitle"></div>
 </div>
 
 <script>
@@ -793,7 +812,15 @@ function defaultSave() {
     profileSeed: (Math.random() * 4294967296) >>> 0,
     tutorialDone: false, skippedTutorial: false, tipShown: false,
     consecutiveGameOvers: 0, lastStars: 0,
-    counters: { rewardedOffered: 0, rewardedWatched: 0, deaths: 0, levelsPlayed: 0, levelsWon: 0 },
+    music: true, sfx: true, vibe: true,   /* Ayarlar kartı */
+    /* reklam katmanı (bkz. Ads): profil harfi A/B/C/D, reklamsız bayrağı, geçiş reklamı sayaçları */
+    noAds: false, profile: 'B',
+    adLastAt: 0,        /* son geçiş reklamı (Date.now ms) */
+    adLevelsSince: 0,   /* son geçiş reklamından beri bitirilen bölüm (play kipi) */
+    adDeaths: 0,        /* bu bölümde yaşanan can bitişi (kazanınca sıfırlanır) */
+    adCalm: 0,          /* can bitişinden sonra geçiş reklamsız geçecek bölüm sayısı */
+    adProactiveDone: false,
+    counters: { rewardedOffered: 0, rewardedWatched: 0, interstitialShown: 0, deaths: 0, levelsPlayed: 0, levelsWon: 0 },
     cur: null                     /* oynanan bölümün bulmacası (yeniden açınca aynı kalsın) */
   };
 }
@@ -1029,6 +1056,7 @@ function onLevelWon() {
     P.cur = null;
     P.consecutiveGameOvers = 0;
     P.counters.levelsWon++;
+    Ads.noteWin();
   }
   P.lastStars = stars;
   save();
@@ -1041,6 +1069,7 @@ function onGameOver() {
   S.status = 'over';
   syncClock();
   P.counters.deaths++;
+  P.adDeaths++;
   P.consecutiveGameOvers++;
   if (P.consecutiveGameOvers >= 2) { P.zp = clamp(P.zp - 10, 0, 100); P.consecutiveGameOvers = 0; }
   save();
@@ -1110,7 +1139,10 @@ function updateHud() {
   var hearts = lives.getElementsByTagName('img'), hi;
   for (hi = 0; hi < hearts.length; hi++) {
     var hsrc = hi < S.lives ? 'kalp-dolu.webp' : 'kalp-bos.webp';
-    if (hearts[hi].getAttribute('src') !== hsrc) hearts[hi].setAttribute('src', hsrc);
+    if (hearts[hi].getAttribute('src') !== hsrc) {
+      hearts[hi].setAttribute('src', hsrc);
+      hearts[hi].setAttribute('width', hi < S.lives ? 113 : 107);
+    }
   }
   lives.classList.toggle('out', S.lives <= 0);
   lives.setAttribute('aria-label', 'Kalan can: ' + Math.max(0, S.lives) + ' / ' + START_LIVES);
@@ -1120,6 +1152,7 @@ function updateHud() {
   setHelpButton('btnHint', 'badgeHint', P.bulb, 'İpucu: fare olamayacak kareleri işaretle', play);
   setHelpButton('btnGlass', 'badgeGlass', P.glass, 'Büyüteç: bir fareyi göster', play);
   $('pause').disabled = !(S.status === 'play' && !overlayOpen);
+  $('settings').disabled = overlayOpen;
 }
 
 function setHelpButton(btnId, badgeId, count, label, enabled) {
@@ -1230,21 +1263,63 @@ function onCellClick(e) {
 }
 
 /* ---------- Sesler ---------- */
-var SOUNDS = { fare: 'ses-fare.mp3', pop1: 'pop-1.mp3', pop2: 'pop-2.mp3', pop3: 'pop-3.mp3', pop4: 'pop-4.mp3', pop5: 'pop-5.mp3', pop6: 'pop-6.mp3', pop7: 'pop-7.mp3', pop8: 'pop-8.mp3' }, SOUND_CACHE = {};
+var SOUNDS = { fare: 'ses-fare.mp3', tap: 'pop-1.mp3', pop1: 'pop-1.mp3', pop2: 'pop-2.mp3', pop3: 'pop-3.mp3', pop4: 'pop-4.mp3', pop5: 'pop-5.mp3', pop6: 'pop-6.mp3', pop7: 'pop-7.mp3', pop8: 'pop-8.mp3' }, SOUND_CACHE = {};
 /* pati sesi: 8 pop sırayla, sonra başa */
 var POP_I = 0;
 function playPop() { POP_I = POP_I % 8 + 1; playSound('pop' + POP_I); }
-function playSound(name) {
+/* Ayarlar'da "Ses" kapalıysa hiçbir efekt çalmaz; vol verilmezse 1 */
+function playSound(name, vol) {
+  if (!P.sfx) return;
   try {
     var base = SOUND_CACHE[name];
     if (!base) { base = SOUND_CACHE[name] = new Audio(SOUNDS[name]); base.preload = 'auto'; }
     var a = base.paused ? base : base.cloneNode(true);
+    a.volume = vol == null ? 1 : vol;        /* cloneNode ses düzeyini taşımaz: her seferinde ver */
     a.currentTime = 0;
     var p = a.play();
     if (p && p.catch) p.catch(function () {});
   } catch (e) {}
 }
 (function () { for (var k in SOUNDS) { try { SOUND_CACHE[k] = new Audio(SOUNDS[k]); SOUND_CACHE[k].preload = 'auto'; } catch (e) {} } })();
+/* Ayarlar'da "Titreşim" kapalıysa titremez */
+function vibrate(ms) { try { if (P.vibe && navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+
+/* ---------- Arka plan müziği ----------
+   Tek Audio, döngüde, %35. Tarayıcı kuralı: ilk dokunuştan önce çalınamaz (unlock).
+   want = müzik açık + kilit açık + reklam oynamıyor + sayfa görünür. */
+var Music = {
+  el: null, unlocked: false, held: false,
+  init: function () {
+    try { this.el = new Audio('muzik.mp3'); this.el.loop = true; this.el.volume = 0.35; this.el.preload = 'auto'; } catch (e) { this.el = null; }
+  },
+  sync: function () {
+    var a = this.el;
+    if (!a) return;
+    var want = P.music && this.unlocked && !this.held && !document.hidden;
+    if (want && a.paused) { try { var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+    else if (!want && !a.paused) a.pause();
+  },
+  hold: function (on) { this.held = !!on; this.sync(); }      /* reklam sırasında sus */
+};
+Music.init();
+(function () {
+  /* kullanıcı etkinleştiren olaylar: dokunuşta pointerup/touchend, farede pointerdown, klavye */
+  var evs = ['pointerdown', 'pointerup', 'touchend', 'keydown', 'click'];
+  function off() { for (var i = 0; i < evs.length; i++) document.removeEventListener(evs[i], unlock, true); }
+  function unlock() {
+    Music.unlocked = true;
+    if (!P.music) { off(); return; }      /* sonradan açılırsa açma tuşu zaten bir dokunuş */
+    Music.sync();
+  }
+  for (var i = 0; i < evs.length; i++) document.addEventListener(evs[i], unlock, true);
+  if (Music.el) Music.el.addEventListener('playing', off);
+  document.addEventListener('visibilitychange', function () { Music.sync(); });
+})();
+/* her tuşa basışta yumuşak pop (kareler hariç: onların 8 pop döngüsü var) */
+document.addEventListener('click', function (e) {
+  var b = e.target && e.target.closest ? e.target.closest('button') : null;
+  if (b && !b.classList.contains('cell')) playSound('tap', 0.5);
+});
 
 function revealMouse(r, c) {
   S.cells[r][c] = 'mouse';
@@ -1259,7 +1334,7 @@ function revealMouse(r, c) {
 function mistake(r, c) {
   var v = view.cells[r][c], img = v.img;
   v.busy = true;
-  try { if (navigator.vibrate) navigator.vibrate(60); } catch (err) {}
+  vibrate(60);
   img.classList.remove('pop');
   if (!REDUCED) { restartClass(img, 'shake'); fx(function () { img.classList.remove('shake'); }, 350); }
   img.classList.add('bad');
@@ -1290,6 +1365,7 @@ function useHint() {
   save();
   for (var i = 0; i < picks.length; i++) markPaw(picks[i][0], picks[i][1]);
   updateHud();
+  if (P.bulb === 0) Ads.maybeProactive('hints');
 }
 
 function markPaw(r, c) {
@@ -1364,6 +1440,7 @@ function useGlass() {
   S.glasses++;
   save();
   revealMouse(best, LEVEL.solution[best]);
+  if (P.glass === 0) Ads.maybeProactive('glasses');
 }
 
 /* =====================================================================
@@ -1505,13 +1582,126 @@ $('tutSkip').addEventListener('click', function () {
 });
 
 /* =====================================================================
+   O2. REKLAM KATMANI
+   Tek giriş noktası: Ads. Gerçek SDK gelince yalnızca Ads.provider değişir.
+   Sağlayıcı sözleşmesi:
+     showRewarded(cb, failCb)  -> sonuna kadar izlendiyse cb(), yüklenemedi/yarıda kaldıysa failCb()
+     showInterstitial(cb)      -> reklam kapanınca (ya da gösterilemezse) cb()
+   Ödüllü yerler (placement): 'can' (can bitti), 'ampul' (ipucu hakkı), 'buyutec' (büyüteç hakkı).
+   Sayaçlar: rewardedOffered = teklif tuşu ekrana geldi, rewardedWatched = ödül verildi,
+             interstitialShown = geçiş reklamı gösterildi.
+   Profil (P.profile):  D = noAds (reklamsız);  en az 5 teklif yoksa B (veri yok);
+             izleme oranı >= %60 A, %20–60 B, < %20 C.
+   Geçiş reklamı kuralları (interstitialAfterLevel):
+     - öğreticide yok, noAds oyuncuda yok, bölüm 4'ten önce yok
+     - can bitişinden hemen sonra yok: o bölümde can bittiyse sonraki 1, iki kez bittiyse sonraki 2
+       "Sonraki bölüm" reklamsız geçer (adCalm)
+     - son reklamdan beri en az 3 dk ve en az GAP bölüm: C = 3 (plandaki gibi), B = 4, A = 5
+       (ödüllü izleyen oyuncuyu geçiş reklamıyla daha az yorarız)
+   A oyuncusu: bir yardım hakkı 0'a inince bir kereye mahsus "+2 hak" kartı kendiliğinden açılır.
+   ===================================================================== */
+var AD_SIM_MS = 2000;
+var AD_GAP = { A: 5, B: 4, C: 3 };
+var AD_MIN_LEVEL = 4, AD_MIN_MS = 3 * 60 * 1000, AD_PROFILE_MIN_OFFERS = 5;
+
+/* SDK yokken yerleşik benzetici: 2 sn "Reklam" kartı + ilerleme çubuğu */
+var SimAdProvider = {
+  show: function (title, cb) {
+    openOverlay(
+      '<h2 id="ovTitle">Reklam</h2>' +
+      '<p>' + title + '</p>' +
+      '<div class="ad-bar" aria-hidden="true"><i></i></div>', false);
+    setTimeout(cb, AD_SIM_MS);
+  },
+  showRewarded: function (cb, failCb) { SimAdProvider.show('Ödülün birazdan geliyor…', cb); },
+  showInterstitial: function (cb) { SimAdProvider.show('Birazdan devam ediyoruz…', cb); }
+};
+
+var Ads = {
+  // TODO: AdMob (Android) / AdSense H5 (web) sağlayıcısı buraya
+  provider: SimAdProvider,
+  busy: false,
+
+  updateProfile: function () {
+    var o = P.counters.rewardedOffered, w = P.counters.rewardedWatched, p;
+    if (P.noAds) p = 'D';
+    else if (o < AD_PROFILE_MIN_OFFERS) p = 'B';
+    else { var r = w / o; p = r >= 0.6 ? 'A' : r >= 0.2 ? 'B' : 'C'; }
+    P.profile = p;
+    return p;
+  },
+
+  /* teklif tuşu ekrana geldi */
+  offered: function (placement) {
+    P.counters.rewardedOffered++;
+    Ads.updateProfile();
+    save();
+  },
+
+  /* ödüllü reklam: izlenirse onReward(), olmazsa onFail() */
+  rewarded: function (placement, onReward, onFail) {
+    if (Ads.busy) return;
+    Ads.busy = true;
+    Music.hold(true);
+    function end() { Ads.busy = false; Music.hold(false); }
+    Ads.provider.showRewarded(function () {
+      end();
+      P.counters.rewardedWatched++;
+      Ads.updateProfile();
+      save();
+      onReward();
+    }, function () {
+      end();
+      if (onFail) onFail(); else showAdFail(placement);
+    });
+  },
+
+  /* bölüm kazanıldı (play kipi): sayaçlar */
+  noteWin: function () {
+    P.adLevelsSince++;
+    if (P.adDeaths >= 2) P.adCalm = Math.max(P.adCalm, 2);
+    else if (P.adDeaths >= 1) P.adCalm = Math.max(P.adCalm, 1);
+    P.adDeaths = 0;
+  },
+
+  /* "Sonraki bölüm"e basıldı: kurallar uygunsa geçiş reklamı, sonra then() */
+  interstitialAfterLevel: function (level, then) {
+    var prof = Ads.updateProfile(), show = true;
+    if (MODE === 'tut' || prof === 'D' || level < AD_MIN_LEVEL || Ads.busy) show = false;
+    else if (P.adCalm > 0) { P.adCalm--; show = false; }
+    else if (P.adLevelsSince < AD_GAP[prof]) show = false;
+    else if (P.adLastAt && Date.now() - P.adLastAt < AD_MIN_MS) show = false;
+    if (!show) { save(); then(); return; }
+    Ads.busy = true;
+    Music.hold(true);
+    P.adLastAt = Date.now();
+    P.adLevelsSince = 0;
+    P.counters.interstitialShown++;
+    save();
+    Ads.provider.showInterstitial(function () { Ads.busy = false; Music.hold(false); then(); });
+  },
+
+  /* A oyuncusu: bir yardım 0'a inince bir kez "+2 hak" kartı */
+  maybeProactive: function (kind) {
+    if (P.adProactiveDone || Ads.updateProfile() !== 'A') return;
+    P.adProactiveDone = true;
+    save();
+    fx(function () { if (canPlay() && MODE !== 'tut') showAdOffer(kind); }, REDUCED ? 300 : 900);
+  }
+};
+
+/* =====================================================================
    O. KAPLAMA KARTLARI
    ===================================================================== */
-function adButton(act, caption) {
-  P.counters.rewardedOffered++;
-  save();
+function adButton(act, caption, placement) {
+  Ads.offered(placement);
   return '<button class="ad-btn" type="button" data-act="' + act + '" aria-label="' + caption + '">' +
-         '<img src="btn-reklam.webp" width="341" height="220" alt=""><span class="cap">' + caption + '</span></button>';
+         '<img src="ik-reklam.webp" width="162" height="160" alt=""><span class="cap">' + caption + '</span></button>';
+}
+/* yuvarlak simge tuşu + altında yazı */
+function iconButton(act, src, w, caption, extra) {
+  return '<button class="ic-btn' + (extra || '') + '" type="button" data-act="' + act + '" aria-label="' + caption + '">' +
+         '<img src="' + src + '" width="' + w + '" height="128" alt=""><span class="cap">' + caption + '</span></button>';
 }
 
 function openOverlay(html, dismissible) {
@@ -1524,7 +1714,7 @@ function openOverlay(html, dismissible) {
   syncClock();
   updateHud();
   var first = card.querySelector('button');
-  if (first) first.focus();
+  if (first) first.focus(); else card.focus();
 }
 
 function closeOverlay() {
@@ -1545,6 +1735,7 @@ function showWin(stars, coins) {
   var replay = MODE === 'replay';
   openOverlay(SPARKLES +
     '<h2 id="ovTitle">' + (replay ? 'Yine başardın!' : 'Bölüm tamam!') + '</h2>' +
+    '<img class="win-cup" src="ik-kupa.webp" width="109" height="96" alt="">' +
     '<div class="win-stars" role="img" aria-label="3 yıldızdan ' + stars + '">' + starsHTML(stars) + '</div>' +
     '<p class="win-info">Süre: <b>' + fmtTime(elapsed()) + '</b>' +
     (coins > 0 ? '<span class="win-coins"><img src="ui-para.webp" width="97" height="96" alt="">' +
@@ -1563,24 +1754,53 @@ function showGameOver() {
   openOverlay(
     '<h2 id="ovTitle">Canın bitti</h2>' +
     '<p>Canların dolsun, kaldığın yerden devam et.</p>' +
-    '<div class="acts">' + adButton('adLife', 'Reklam izle, canlar dolsun') +
-    '<button class="txt-btn" type="button" data-act="restart">Baştan başla</button></div>');
+    '<div class="icon-row">' + adButton('adLife', 'Reklam izle, canlar dolsun', 'can') +
+    iconButton('restart', 'ik-yeniden.webp', 129, 'Baştan başla') + '</div>');
 }
 
 function showAdOffer(kind) {
   var title = kind === 'hints' ? 'İpucu hakkın bitti' : 'Büyüteç hakkın bitti';
   openOverlay(
     '<h2 id="ovTitle">' + title + '</h2>' +
-    '<div class="acts">' + adButton(kind === 'hints' ? 'adHints' : 'adGlasses', 'Reklam izle, +' + AD_HELP_REWARD + ' hak') +
+    '<div class="acts">' + adButton(kind === 'hints' ? 'adHints' : 'adGlasses', 'Reklam izle, +' + AD_HELP_REWARD + ' hak',
+                                    kind === 'hints' ? 'ampul' : 'buyutec') +
     '<button class="txt-btn" type="button" data-act="close">Vazgeç</button></div>', true);
+}
+
+/* reklam gelmedi (gerçek SDK'da olabilir) */
+function showAdFail(placement) {
+  openOverlay(
+    '<h2 id="ovTitle">Reklam şu an yok</h2>' +
+    '<p>Biraz sonra tekrar dene.</p>' +
+    '<div class="acts"><button class="txt-btn" type="button" data-act="' + (placement === 'can' ? 'backToOver' : 'close') + '">Tamam</button></div>',
+    placement !== 'can');
 }
 
 function showPause() {
   if (!S || S.status !== 'play' || overlayOpen) return;
   openOverlay(
     '<h2 id="ovTitle">Duraklatıldı</h2>' +
-    '<div class="acts"><button class="main-btn" type="button" data-act="close">Devam et</button>' +
-    '<button class="txt-btn" type="button" data-act="restart">Baştan başla</button></div>', true);
+    '<div class="icon-row">' +
+    iconButton('close', 'ik-oynat.webp', 130, 'Devam et') +
+    iconButton('restart', 'ik-yeniden.webp', 129, 'Baştan başla') +
+    iconButton('home', 'ik-ev.webp', 129, 'Ana sayfa') + '</div>', true);
+}
+
+/* ---------- Ayarlar: müzik / ses / titreşim (P.music / P.sfx / P.vibe) ---------- */
+var TOGGLES = { music: ['Müzik', 'ik-muzik'], sfx: ['Ses', 'ik-ses'], vibe: ['Titreşim', 'ik-titresim'] };
+function toggleSrc(key) { return TOGGLES[key][1] + (P[key] ? '' : '-kapali') + '.webp'; }
+function showSettings() {
+  if (overlayOpen) return;
+  var html = '<h2 id="ovTitle">Ayarlar</h2><div class="icon-row">', k;
+  for (k in TOGGLES) if (TOGGLES.hasOwnProperty(k)) {
+    html += '<button class="ic-btn tog" type="button" data-act="toggle" data-key="' + k + '" aria-pressed="' + (P[k] ? 'true' : 'false') +
+            '" aria-label="' + TOGGLES[k][0] + '"><img src="' + toggleSrc(k) + '" width="128" height="128" alt="">' +
+            '<span class="cap">' + TOGGLES[k][0] + '</span></button>';
+  }
+  html += '</div><div class="close-row">' +
+          '<button class="ic-btn close-x" type="button" data-act="close" aria-label="Kapat">' +
+          '<img src="ik-kapat.webp" width="129" height="128" alt=""></button></div>';
+  openOverlay(html, true);
 }
 
 var ACTIONS = {
@@ -1590,37 +1810,54 @@ var ACTIONS = {
     if (MODE === 'tut') { closeOverlay(); startTutorial(); return; }
     begin(PUZ, MODE);
   },
+  home: function () {
+    // TODO: ana menü (bölüm haritası gelince oraya gidecek; şimdilik bölümü baştan başlatır)
+    ACTIONS.restart();
+  },
+  toggle: function (btn) {
+    var k = btn.getAttribute('data-key');
+    if (!TOGGLES.hasOwnProperty(k)) return;
+    P[k] = !P[k];
+    save();
+    btn.setAttribute('aria-pressed', P[k] ? 'true' : 'false');
+    btn.querySelector('img').setAttribute('src', toggleSrc(k));
+    if (k === 'music') Music.sync();
+    if (k === 'vibe' && P.vibe) vibrate(40);
+  },
   next: function (btn) {
     var L = P.level;
     function go() { startGameLevel(L); }
-    if (P.cur && P.cur.L === L) { go(); return; }
-    if (pre && pre.done && pre.fits(L, P.zp)) { go(); return; }
-    btn.disabled = true;
-    btn.textContent = 'Hazırlanıyor…';
-    setTimeout(go, 30);
+    Ads.interstitialAfterLevel(L - 1, function () {
+      if (P.cur && P.cur.L === L) { go(); return; }
+      if (pre && pre.done && pre.fits(L, P.zp)) { go(); return; }
+      btn.disabled = true;
+      btn.textContent = 'Hazırlanıyor…';
+      setTimeout(go, 30);
+    });
   },
   replay: function () { begin(PUZ, 'replay'); },
   tutDone: function () { closeOverlay(); finishTutorial(false); },
+  backToOver: function () { showGameOver(); },
   adLife: function () {
-    // TODO: gerçek ödüllü reklam
-    bump('rewardedWatched');
-    S.lives = START_LIVES;
-    S.status = 'play';
-    closeOverlay();
+    Ads.rewarded('can', function () {
+      S.lives = START_LIVES;
+      S.status = 'play';
+      closeOverlay();
+    });
   },
   adHints: function () {
-    // TODO: gerçek ödüllü reklam
-    bump('rewardedWatched');
-    P.bulb += AD_HELP_REWARD;
-    save();
-    closeOverlay();
+    Ads.rewarded('ampul', function () {
+      P.bulb += AD_HELP_REWARD;
+      save();
+      closeOverlay();
+    });
   },
   adGlasses: function () {
-    // TODO: gerçek ödüllü reklam
-    bump('rewardedWatched');
-    P.glass += AD_HELP_REWARD;
-    save();
-    closeOverlay();
+    Ads.rewarded('buyutec', function () {
+      P.glass += AD_HELP_REWARD;
+      save();
+      closeOverlay();
+    });
   }
 };
 
@@ -1658,6 +1895,7 @@ $('grid').addEventListener('click', onCellClick);
 $('btnHint').addEventListener('click', useHint);
 $('btnGlass').addEventListener('click', useGlass);
 $('pause').addEventListener('click', showPause);
+$('settings').addEventListener('click', showSettings);
 
 /* tüm kare resimleri + arayüz yüklenince kaydedilen bölümden (ya da öğreticiden) başlar */
 (function boot() {
@@ -1669,7 +1907,12 @@ $('pause').addEventListener('click', showPause);
             'ui-yildiz-dolu.webp', 'ui-yildiz-yarim.webp', 'ui-yildiz-bos.webp',
             'ui-para.webp', 'ui-saat.webp', 'ui-pati.webp', 'ui-sayac.webp',
             'ui-rozet.webp', 'ui-arti.webp', 'ui-kart.webp', 'ui-btn-altin.webp',
-            'ui-btn-mor.webp', 'ui-parilti.webp', 'rakam-bolu.webp', 'rakam-iki-nokta.webp');
+            'ui-btn-mor.webp', 'ui-parilti.webp', 'rakam-bolu.webp', 'rakam-iki-nokta.webp',
+            'ui-ayar.webp', 'ik-ampul.webp', 'ik-buyutec.webp', 'ik-reklam.webp', 'ik-kupa.webp',
+            'ik-oynat.webp', 'ik-yeniden.webp', 'ik-ev.webp', 'ik-kapat.webp',
+            'ik-muzik.webp', 'ik-muzik-kapali.webp', 'ik-ses.webp', 'ik-ses-kapali.webp',
+            'ik-titresim.webp', 'ik-titresim-kapali.webp');
+  Ads.updateProfile();
   for (var d = 0; d <= 9; d++) list.push('rakam-' + d + '.webp');
   preload(list, function () {
     if (!P.tutorialDone) startTutorial();
