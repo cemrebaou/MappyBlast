@@ -298,6 +298,18 @@ html:lang(ar) *,html:lang(ur) *,html:lang(hi) *,html:lang(bn) *,html:lang(zh-Han
 .row-btn .cap{flex:1 1 auto;min-width:0;font-size:calc(20*var(--u));font-weight:800;line-height:1.1;color:var(--ink);white-space:nowrap}
 .row-btn .st{flex:0 0 auto;margin-left:calc(8*var(--u));font-size:calc(14*var(--u));font-weight:700;line-height:1;color:var(--ink-dim);white-space:nowrap}
 .row-btn:active img{transform:scale(.92)}
+/* ---------- Kazanma / kaybetme karakteri: kartın üstünde, üst kenarına biraz basarak durur ---------- */
+.card.has-celeb{--celh:calc(168*var(--u));--celov:calc(26*var(--u));margin-top:calc(var(--celh) - var(--celov))}
+.celeb{position:absolute;left:50%;bottom:calc(100% - var(--celov));z-index:3;height:var(--celh);width:calc(var(--celh) * 1.5);
+  transform:translateX(-50%);display:flex;justify-content:center;align-items:flex-end;pointer-events:none}
+.celeb-halo{position:absolute;left:50%;top:54%;width:calc(var(--celh) * 1.45);height:calc(var(--celh) * 1.12);transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(closest-side,rgba(255,252,238,.92) 0,rgba(255,240,250,.62) 45%,rgba(236,226,255,.28) 72%,rgba(255,255,255,0) 100%);
+  -webkit-backdrop-filter:blur(calc(7*var(--u)));backdrop-filter:blur(calc(7*var(--u)));
+  -webkit-mask-image:radial-gradient(closest-side,#000 55%,transparent 100%);mask-image:radial-gradient(closest-side,#000 55%,transparent 100%)}
+.celeb-sp{position:relative;display:block;height:100%;width:auto;background-repeat:no-repeat;
+  filter:drop-shadow(0 calc(3*var(--u)) calc(4*var(--u)) rgba(58,42,94,.25))}
+.card.has-celeb{padding-top:calc(var(--cw) * .1 + 12*var(--u));padding-bottom:calc(var(--cw) * .08 + 8*var(--u))}
 /* kazandın kartı: kupa */
 .win-cup{display:block;height:calc(54*var(--u));width:auto;margin:0 auto calc(4*var(--u))}
 /* yerleşik reklam kartı (SDK yokken) */
@@ -1573,18 +1585,19 @@ function vibrate(ms) { try { if (P.vibe && navigator.vibrate) navigator.vibrate(
    Tek Audio, döngüde, %35. Tarayıcı kuralı: ilk dokunuştan önce çalınamaz (unlock).
    want = müzik açık + kilit açık + reklam oynamıyor + sayfa görünür. */
 var Music = {
-  el: null, unlocked: false, held: false,
+  el: null, unlocked: false, held: false, ducked: false,
   init: function () {
     try { this.el = new Audio('muzik.mp3'); this.el.loop = true; this.el.volume = 0.35; this.el.preload = 'auto'; } catch (e) { this.el = null; }
   },
   sync: function () {
     var a = this.el;
     if (!a) return;
-    var want = P.music && this.unlocked && !this.held && !document.hidden;
+    var want = P.music && this.unlocked && !this.held && !this.ducked && !document.hidden;
     if (want && a.paused) { try { var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
     else if (!want && !a.paused) a.pause();
   },
-  hold: function (on) { this.held = !!on; this.sync(); }      /* reklam sırasında sus */
+  hold: function (on) { this.held = !!on; this.sync(); },     /* reklam sırasında sus */
+  duck: function (on) { if (this.ducked !== !!on) { this.ducked = !!on; this.sync(); } }   /* kazanma / kaybetme sesi çalarken sus */
 };
 Music.init();
 (function () {
@@ -1600,6 +1613,126 @@ Music.init();
   if (Music.el) Music.el.addEventListener('playing', off);
   document.addEventListener('visibilitychange', function () { Music.sync(); });
 })();
+/* ---------- Kazanma / kaybetme karakteri (kartın üstünde duran animasyonlu fare + ses) ----------
+   Sprite: 6x2, 12 kare, her sayfanın kendi kare boyu ve süresi; CSS background-position + setTimeout.
+   Kazanınca 3 kutlamadan biri (art arda aynısı değil) + eşli ses bir kez.
+   Kaybedince ağlayan fare, ses-aglama bir kez, bitince ses-kayip-loop kart kapanana dek döner.
+   Sesler Ses ayarına uyar; ses çalarken müzik susar (Music.duck), kart kapanınca geri gelir. */
+var CELEB_PFX = '';
+var CELEB = {
+  alkis:   { src: 'kutlama-alkis.webp',   cw: 160, ch: 240, ms: 140, snd: 'ses-alkis.mp3' },
+  duduk:   { src: 'kutlama-duduk.webp',   cw: 175, ch: 240, ms: 140, snd: 'ses-duduk.mp3' },
+  trampet: { src: 'kutlama-trampet.webp', cw: 162, ch: 240, ms: 170, snd: 'ses-trampet.mp3' },
+  aglama:  { src: 'uzgun-aglama.webp',    cw: 191, ch: 240, ms: 170, snd: 'ses-aglama.mp3' }
+};
+var CELEB_WIN = ['alkis', 'duduk', 'trampet'];
+var Celeb = {
+  key: null, lastWin: null, timer: null, gen: 0, lose: false, loopOn: false,
+  imgs: [], aud: {}, loaded: false,
+  /* oyun başladıktan sonra çağrılır: ilk kazanmada boş görünmesin */
+  preload: function () {
+    if (this.loaded) return;
+    this.loaded = true;
+    for (var k in CELEB) if (CELEB.hasOwnProperty(k)) {
+      var im = new Image(); im.src = CELEB_PFX + CELEB[k].src; this.imgs.push(im);
+      this.audio(CELEB[k].snd);
+    }
+    this.audio('ses-kayip-loop.mp3');
+  },
+  audio: function (f) {
+    var a = this.aud[f];
+    if (!a) { try { a = this.aud[f] = new Audio(CELEB_PFX + f); a.preload = 'auto'; } catch (e) { a = null; } }
+    return a;
+  },
+  pickWin: function () {
+    var opts = [], i;
+    for (i = 0; i < CELEB_WIN.length; i++) if (CELEB_WIN[i] !== this.lastWin) opts.push(CELEB_WIN[i]);
+    var k = opts[Math.floor(Math.random() * opts.length)];
+    this.lastWin = k;
+    return k;
+  },
+  /* kartın HTML'inin başına eklenir; kart sınıfına 'has-celeb' verilir */
+  html: function (key) {
+    var c = CELEB[key];
+    return '<div class="celeb" aria-hidden="true"><span class="celeb-halo"></span>' +
+           '<span class="celeb-sp" style="aspect-ratio:' + c.cw + '/' + c.ch + '"></span></div>';
+  },
+  frame: function (el, c, f) {
+    var col = f % 6, row = Math.floor(f / 6);
+    el.style.backgroundImage = 'url(' + CELEB_PFX + c.src + ')';
+    el.style.backgroundSize = '600% 200%';
+    el.style.backgroundPosition = (col / 5 * 100) + '% ' + (row * 100) + '%';
+  },
+  /* kart açıldıktan sonra: animasyon + ses. quiet: ağlama sesi çalmadan doğrudan döngü (reklam yoktan dönüş) */
+  start: function (key, quiet) {
+    this.stop();
+    this.preload();
+    var self = this, c = CELEB[key], el = document.querySelector('#card .celeb-sp'), f = 0, g = this.gen;
+    this.key = key;
+    this.lose = key === 'aglama';
+    if (el) {
+      if (REDUCED) this.frame(el, c, 0);
+      else (function step() {
+        if (g !== self.gen || !el.isConnected) return;
+        self.frame(el, c, f);
+        f = (f + 1) % 12;
+        self.timer = setTimeout(step, c.ms);
+      })();
+    }
+    if (!P.sfx) return;
+    if (this.lose && quiet) { this.startLoop(); return; }
+    var a = this.audio(c.snd);
+    if (!a) { if (this.lose) this.startLoop(); return; }
+    Music.duck(true);
+    a.onended = function () {
+      a.onended = null;
+      if (g !== self.gen) return;
+      if (self.lose) self.startLoop(); else Music.duck(false);
+    };
+    this.play(a, false);
+  },
+  startLoop: function () {
+    if (!P.sfx || document.hidden) { this.loopOn = this.lose; return; }
+    var a = this.audio('ses-kayip-loop.mp3');
+    this.loopOn = true;
+    if (!a) return;
+    Music.duck(true);
+    this.play(a, true);
+  },
+  play: function (a, loop) {
+    try {
+      a.loop = loop; a.volume = 1; a.currentTime = 0;
+      var p = a.play();
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  },
+  silence: function () {
+    for (var f in this.aud) if (this.aud.hasOwnProperty(f) && this.aud[f]) {
+      try { var a = this.aud[f]; a.onended = null; if (!a.paused) a.pause(); a.currentTime = 0; } catch (e) {}
+    }
+  },
+  /* kart kapanınca / başka kart açılınca / reklam başlarken */
+  stop: function () {
+    this.gen++;
+    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+    this.key = null; this.lose = false; this.loopOn = false;
+    this.silence();
+    Music.duck(false);
+  }
+};
+/* sayfa gizlenince ses hemen durur; kaybetme kartı hâlâ açıksa görününce döngü sürer */
+document.addEventListener('visibilitychange', function () {
+  if (!Celeb.key) return;
+  if (document.hidden) {
+    var wasLose = Celeb.lose;
+    Celeb.silence();
+    Celeb.loopOn = wasLose;
+    if (!wasLose) Music.duck(false);
+  } else if (Celeb.lose && Celeb.loopOn) {
+    Celeb.startLoop();
+  }
+});
+
 /* her tuşa basışta yumuşak pop (kareler hariç: onların 8 pop döngüsü var) */
 document.addEventListener('click', function (e) {
   var b = e.target && e.target.closest ? e.target.closest('button') : null;
@@ -2087,6 +2220,7 @@ var Ads = {
   rewarded: function (placement, onReward, onFail) {
     if (Ads.busy) return;
     Ads.busy = true;
+    Celeb.stop();             /* kaybetme döngüsü reklamdan önce susar */
     Music.hold(true);
     function end() { Ads.busy = false; Music.hold(false); }
     Ads.provider.showRewarded(function () {
@@ -2120,6 +2254,7 @@ var Ads = {
     if (show && Ads.provider.ready && !Ads.provider.ready()) show = false;
     if (!show) { save(); then(); return; }
     Ads.busy = true;
+    Celeb.stop();
     Music.hold(true);
     P.adLastAt = Date.now();
     P.adLevelsSince = 0;
@@ -2167,6 +2302,7 @@ function rowButton(act, src, w, caption, extra, state) {
 }
 
 function openOverlay(html, dismissible, cls) {
+  Celeb.stop();
   var card = $('card');
   card.className = 'card' + (cls ? ' ' + cls : '');
   card.innerHTML = html;
@@ -2186,6 +2322,7 @@ function openOverlay(html, dismissible, cls) {
 /* uzun çeviriler tek satıra sığsın */
 function fitCard() { fitAll($('card'), 'h2, .row-btn .cap, .acts.pair button, .main-btn, .txt-btn'); }
 function closeOverlay() {
+  Celeb.stop();
   $('overlay').hidden = true;
   $('card').innerHTML = '';
   overlayOpen = false;
@@ -2200,8 +2337,8 @@ var SPARKLES =
   '<img class="sparkle s3" src="ui-parilti.webp" width="87" height="96" alt="">';
 
 function showWin(stars, coins) {
-  var replay = MODE === 'replay';
-  openOverlay(SPARKLES +
+  var replay = MODE === 'replay', ck = Celeb.pickWin();
+  openOverlay(Celeb.html(ck) + SPARKLES +
     '<h2 id="ovTitle">' + (replay ? t('winAgain') : t('winTitle')) + '</h2>' +
     '<img class="win-cup" src="ik-kupa.webp" width="109" height="96" alt="">' +
     '<div class="win-stars" role="img" aria-label="' + t('stars', stars) + '">' + starsHTML(stars) + '</div>' +
@@ -2209,21 +2346,26 @@ function showWin(stars, coins) {
     (coins > 0 ? '<span class="win-coins"><img src="ui-para.webp" width="97" height="96" alt="">' +
                  '<b>+' + coins + '</b></span>' : '') + '</p>' +
     '<div class="acts pair"><button class="txt-btn" type="button" data-act="replay">' + t('playAgain') + '</button>' +
-    '<button class="main-btn" type="button" data-act="next">' + t('next') + '</button></div>');
+    '<button class="main-btn" type="button" data-act="next">' + t('next') + '</button></div>', false, 'has-celeb');
+  Celeb.start(ck);
 }
 
 function showTutWin() {
-  openOverlay(SPARKLES +
+  var ck = Celeb.pickWin();
+  openOverlay(Celeb.html(ck) + SPARKLES +
     '<h2 id="ovTitle">' + t('tutWin') + '</h2>' +
-    '<div class="acts"><button class="main-btn" type="button" data-act="tutDone">' + t('startGame') + '</button></div>');
+    '<div class="acts"><button class="main-btn" type="button" data-act="tutDone">' + t('startGame') + '</button></div>', false, 'has-celeb');
+  Celeb.start(ck);
 }
 
-function showGameOver() {
-  openOverlay(
+/* quiet: "Reklam şu an yok"tan dönüş, ağlama sesi tekrar çalmaz (yalnızca döngü) */
+function showGameOver(quiet) {
+  openOverlay(Celeb.html('aglama') +
     '<h2 id="ovTitle">' + t('outTitle') + '</h2>' +
     '<p>' + t('outText') + '</p>' +
     '<div class="icon-row">' + adButton('adLife', t('adLife'), 'can') +
-    iconButton('restart', 'ik-yeniden.webp', 129, t('restart')) + '</div>');
+    iconButton('restart', 'ik-yeniden.webp', 129, t('restart')) + '</div>', false, 'has-celeb');
+  Celeb.start('aglama', quiet);
 }
 
 function showAdOffer(kind) {
@@ -2304,7 +2446,7 @@ var ACTIONS = {
   },
   replay: function () { begin(PUZ, 'replay'); },
   tutDone: function () { closeOverlay(); finishTutorial(false); },
-  backToOver: function () { showGameOver(); },
+  backToOver: function () { showGameOver(true); },
   adLife: function () {
     Ads.rewarded('can', function () {
       S.lives = START_LIVES;
@@ -2349,6 +2491,9 @@ function preload(list, done) {
     img.src = list[i];
   }
 }
+
+/* kutlama / ağlama sprite'ları ve sesleri: oyun açıldıktan biraz sonra */
+setTimeout(function () { Celeb.preload(); }, 1200);
 
 (function preloadSprites() {
   preload([SPRITES.emerge.src, SPRITES.idle.src], function () {

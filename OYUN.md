@@ -167,6 +167,14 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 - İp boyu her 9,5 m'de %1 küçülür, %50'ye ~475 m'de iner. Gökyüzü geçişleri aynı sınırlarda (±8 m).
 - En üstte banner reklam alanı (56u + çentik) her zaman ayrılı; HUD onun altında. Simülatör banner'ı 2. oyundan itibaren gösterir (`Ads.banner()`), reklamsız oyuncuya hiç.
 
+## Kazanma / kaybetme ekranı (2026-11-18, puzzle + jump)
+- Kartın üstünde animasyonlu fare durur (ayakları kartın üst kenarına ~26u basar), arkasında yumuşak ışık halesi (radyal parıltı + `backdrop-filter: blur`, maskeli kenar, çerçeve yok). Boy 168u (`--celh`); kart `has-celeb` sınıfıyla o kadar aşağı iner, içerik 12u aşağıda başlar (puzzle'da alt boşluk da +8u). 360×740'ta en kalabalık kart (puzzle can bitti) dahil kaydırmasız sığar.
+- Sprite'lar 6×2, 12 kare, döngü (`Celeb` nesnesi, her sayfada kendi kopyası; CSS background-position + setTimeout). `prefers-reduced-motion`: 0. kare sabit.
+  - Kazanma (puzzle kazandın kartı + öğretici bitişi): 3 kutlamadan biri rastgele, art arda aynısı yok: `kutlama-alkis` (160×240, 140 ms, `ses-alkis.mp3`), `kutlama-duduk` (175×240, 140 ms, `ses-duduk.mp3`), `kutlama-trampet` (162×240, 170 ms, `ses-trampet.mp3`). Ses kart açılınca bir kez.
+  - Kaybetme (puzzle can bitti, jump oyun bitti): `uzgun-aglama` (191×240, 170 ms). `ses-aglama.mp3` bir kez, bitince `ses-kayip-loop.mp3` kart kapanana dek döner. "Reklam şu an yok"tan kart'a dönüşte ağlama sesi tekrar çalmaz, doğrudan döngü.
+- Sesler Ses ayarına uyar. Ses / döngü çalarken müzik susar (`Music.duck`), kazanma sesi bitince ya da kart kapanınca geri gelir. Her `openOverlay` / `closeOverlay` ve her reklam başlangıcı (ödüllü + geçiş) `Celeb.stop()` çağırır: zamanlayıcılar ve sesler hemen durur. Sayfa gizlenince ses durur; kaybetme kartı hâlâ açıksa görününce döngü sürer.
+- Önyükleme: puzzle açıldıktan 1.2 sn sonra, jump "Başlamak için dokun"dan 0.6 sn sonra (`Celeb.preload()`); launcher da 4 sprite + 5 sesi yükler. Dosyalar kökte (jump `../` ile).
+
 ## Android / AdMob (2026-11-18)
 - Uygulama: Capacitor 8 + `@capacitor-community/admob` (^8.3.0), paket `com.air.Mappyjump`. Android derleme dosyaları (package.json, capacitor.config.json, .github/workflows, android-ayar/, assets/) ayrı yürütülüyor; AdMob uygulama kimliği manifestte.
 - Kimlikler (gerçek): uygulama `ca-app-pub-7983529419004158~5565061172` · banner `ca-app-pub-7983529419004158/1882667153` · geçiş `ca-app-pub-7983529419004158/9017221021` · ödüllü `ca-app-pub-7983529419004158/1625816161` (sayfalarda `ADMOB_IDS`).
