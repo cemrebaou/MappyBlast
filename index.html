@@ -60,12 +60,12 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .dg img{display:block;width:auto;flex:none}
 
 /* ---------- Üst sıra ---------- */
-.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:calc(8*var(--u))}
-/* üst çubuk, göstergeler ve kural şeridi tablo çerçevesi genişliğinde (--bw, fitLayout) */
-.top,.stats,.rules{width:calc(var(--bw,100%) - calc(16*var(--u)));max-width:calc(100% - calc(16*var(--u)));align-self:center}
-/* sol üst: ayarlar + duraklat yan yana, yeniden başlat ayarların altında */
-.top-left{display:grid;grid-template-columns:auto auto;gap:calc(4*var(--u));justify-content:start;align-items:start}
-.top-left .ui-btn img{height:calc(44*var(--u))}
+.top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:calc(6*var(--u))}
+/* üst çubuk ve kural şeridi tablo çerçevesi genişliğinde (--bw, fitLayout) */
+.top,.rules-slot{width:calc(var(--bw,100%) - calc(16*var(--u)));max-width:calc(100% - calc(16*var(--u)));align-self:center}
+/* sol üst: ayarlar, duraklat, yeniden başlat tek sırada (360 px'te de en az 40 px) */
+.top-left{display:flex;gap:calc(3*var(--u));align-items:flex-start}
+.top-left .ui-btn img{height:max(40px,calc(42*var(--u)))}
 .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:calc(6*var(--u))}
 .ui-btn{
   border:0;padding:0;margin:0;background:none;line-height:0;border-radius:50%;
@@ -75,40 +75,38 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 .ui-btn:active:not(:disabled){transform:scale(.92)}
 .ui-btn:disabled{opacity:.55}
 .level{display:flex;flex-direction:column;align-items:center;gap:calc(2*var(--u))}
+.level{min-width:0}
+/* plaka orta sütuna sığar (en çok 180u); yazı ve rakam plakayla orantılı (cqw) */
 .plaque{
-  position:relative;width:calc(180*var(--u));width:min(calc(180*var(--u)),40vw);aspect-ratio:557/181;
+  position:relative;width:calc(180*var(--u));width:min(calc(180*var(--u)),100%);aspect-ratio:557/181;
   background:url(ui-baslik.webp) center/100% 100% no-repeat;
+  container-type:inline-size;
 }
 /* krem iç alan: plakanın ortası */
 .level-line{
   position:absolute;left:0;right:0;top:6%;bottom:10%;
-  display:flex;align-items:center;justify-content:center;gap:calc(7*var(--u));
+  display:flex;align-items:center;justify-content:center;gap:calc(7*var(--u));gap:3.9cqw;
 }
 .level-k{
-  font-size:calc(14*var(--u));font-weight:800;letter-spacing:.12em;color:#8a4b3c;padding-top:calc(3*var(--u));
+  font-size:calc(14*var(--u));font-size:9.4cqw;font-weight:800;letter-spacing:.1em;color:#8a4b3c;padding-top:1.7cqw;
 }
-.level-n img{height:calc(26*var(--u))}
-.stars{display:flex;gap:calc(3*var(--u));line-height:0}
-.stars img{display:block;height:calc(22*var(--u));width:auto}
+.level-n img{height:calc(26*var(--u));height:17cqw}
+/* plakanın altında canlar (çerçevesiz kalpler) */
+.hearts{display:flex;gap:calc(3*var(--u));line-height:0;transition:filter .4s,opacity .4s}
+.hearts img{display:block;height:calc(22*var(--u));width:auto}
+.hearts.out{filter:grayscale(1);opacity:.55}
 /* sayı paneli (ui-sayac): mor hap, altın kenar */
 .panel{
   display:flex;align-items:center;justify-content:center;gap:calc(5*var(--u));
   background:url(ui-sayac.webp) center/100% 100% no-repeat;
 }
-.coins{height:calc(38*var(--u));min-width:calc(84*var(--u));padding:0 calc(12*var(--u)) 0 calc(8*var(--u))}
+.coins{height:calc(38*var(--u));min-width:calc(72*var(--u));padding:0 calc(10*var(--u)) 0 calc(7*var(--u))}
 .coins .ico{height:calc(26*var(--u));width:auto;display:block;flex:none}
 .coins .dg img{height:calc(18*var(--u))}
 
-/* ---------- Gösterge sırası: can çubuğu + süre + sayaç ---------- */
-.stats{display:flex;align-items:center;gap:calc(8*var(--u))}
-.lives{flex:none;height:calc(50*var(--u));padding:0 calc(17*var(--u));display:flex;align-items:center;gap:calc(3*var(--u));transition:filter .4s,opacity .4s}
-.lives img{height:calc(20*var(--u));width:auto;display:block}
-.lives.out{filter:grayscale(1);opacity:.55}
-.plate{flex:1;min-width:0;height:calc(50*var(--u));padding:0 calc(14*var(--u))}
-.plate .ico{height:calc(18*var(--u));width:auto;display:block;flex:none}
-.plate .dg img{height:calc(16*var(--u))}
 
 /* ---------- Kural şeridi: 3 küçük kart (mini 3x3 resim + yazı) ---------- */
+.rules-slot{position:relative}
 .rules{
   display:flex;gap:calc(6*var(--u));padding:calc(6*var(--u));border-radius:calc(16*var(--u));background:#fff;
   box-shadow:0 calc(3*var(--u)) 0 #e2d8ec,0 calc(6*var(--u)) calc(14*var(--u)) rgba(58,42,94,.10);
@@ -327,11 +325,12 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 
 /* ---------- Öğretici: yazı kutusu + parmak ---------- */
 .board-wrap{position:relative}
-.is-tut .stats,.is-tut .tools{visibility:hidden}
-.stats{position:relative}
-/* yazı kutusu gösterge sırasının yerinde durur (öğreticide göstergeler gizli) */
+.is-tut .tools{visibility:hidden}
+/* yazı kutusu kural şeridinin yerinde durur (açıkken şerit gizli); şeritten uzunsa aşağı uzar */
+.tut-box:not([hidden]) ~ .rules{visibility:hidden}
 .tut-box{
-  position:absolute;left:2%;right:2%;top:calc(-2*var(--u));z-index:5;visibility:visible;
+  position:absolute;left:0;right:0;top:0;min-height:100%;box-sizing:border-box;z-index:5;
+  display:flex;align-items:center;justify-content:center;
   padding:calc(10*var(--u)) calc(14*var(--u)) calc(8*var(--u));border-radius:calc(18*var(--u));background:#fff;
   box-shadow:0 calc(4*var(--u)) 0 #d9cde6,0 calc(10*var(--u)) calc(24*var(--u)) rgba(58,42,94,.22);
   text-align:center;animation:cardIn .22s ease-out;
@@ -395,7 +394,11 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
         <span class="boss" id="boss" hidden>ZOR BÖLÜM</span>
         <div class="level-line"><span class="level-k" id="levelK">BÖLÜM</span><span class="level-n" id="levelNo"></span></div>
       </div>
-      <div class="stars" id="stars" role="img" aria-label="3 yıldızdan 0"></div>
+      <div class="hearts" id="lives" role="img" aria-label="Kalan can: 3 / 3">
+        <img src="kalp-dolu.webp" width="113" height="96" alt="">
+        <img src="kalp-dolu.webp" width="113" height="96" alt="">
+        <img src="kalp-dolu.webp" width="113" height="96" alt="">
+      </div>
     </div>
 
     <div class="top-right">
@@ -406,27 +409,13 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
     </div>
   </header>
 
-  <section class="stats" aria-label="Göstergeler">
-    <div class="lives panel" id="lives" role="img" aria-label="Kalan can: 3 / 3">
-      <img src="kalp-dolu.webp" width="113" height="96" alt="">
-      <img src="kalp-dolu.webp" width="113" height="96" alt="">
-      <img src="kalp-dolu.webp" width="113" height="96" alt="">
-    </div>
-    <div class="plate panel">
-      <img class="ico" src="ui-saat.webp" width="79" height="96" alt="">
-      <span id="time"></span>
-    </div>
-    <div class="plate panel">
-      <img class="ico" src="ui-pati.webp" width="109" height="96" alt="">
-      <span id="count"></span>
-    </div>
+  <div class="rules-slot">
     <div class="tut-box" id="tutBox" role="status" aria-live="polite" hidden>
       <p id="tutText"></p>
       <button class="tut-skip" type="button" id="tutSkip" data-act="tutSkip" hidden>Geç</button>
     </div>
-  </section>
-
-  <section class="rules" id="rules" aria-label="Kurallar"></section>
+    <section class="rules" id="rules" aria-label="Kurallar"></section>
+  </div>
 
   <section class="play">
   <div class="board-wrap">
@@ -1046,7 +1035,7 @@ function starsHTML(n) {
   }
   return html;
 }
-/* plaka, yıldızlar, mama parası */
+/* plaka, mama parası */
 function renderStatic() {
   var isTut = MODE === 'tut';
   $('stage').classList.toggle('is-tut', isTut);
@@ -1056,8 +1045,6 @@ function renderStatic() {
   $('boss').hidden = isTut || !LEVEL.boss;
   setDigits($('coinNum'), String(P.coins), 18);
   $('coins').setAttribute('aria-label', fmtCoins(P.coins) + ' mama parası');
-  $('stars').innerHTML = starsHTML(P.lastStars);
-  $('stars').setAttribute('aria-label', '3 yıldızdan ' + P.lastStars);
 }
 
 /* ---------- süre ---------- */
@@ -1067,15 +1054,10 @@ function fmtTime(ms) {
   s = s % 60;
   return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
-/* oyun sürüyorsa ve kart açık değilse saat işler */
+/* oyun sürüyorsa ve kart açık değilse saat işler (ekranda gösterilmez; yıldız, ZP, kazandın kartı) */
 function syncClock() {
   if (S.since) { S.ms += Date.now() - S.since; S.since = 0; }
   if (S.status === 'play' && !overlayOpen) S.since = Date.now();
-  renderTime();
-}
-function renderTime() {
-  var t = fmtTime(elapsed());
-  setDigits($('time'), t, 26, 'Süre ' + t);
 }
 
 /* =====================================================================
@@ -1289,8 +1271,6 @@ function updateHud() {
   }
   lives.classList.toggle('out', S.lives <= 0);
   lives.setAttribute('aria-label', 'Kalan can: ' + Math.max(0, S.lives) + ' / ' + START_LIVES);
-
-  setDigits($('count'), S.found + '/' + n, 26, 'Bulunan fare: ' + S.found + ' / ' + n);
 
   setHelpButton('btnHint', 'badgeHint', P.bulb, 'İpucu: fare olamayacak kareleri işaretle', play);
   setHelpButton('btnGlass', 'badgeGlass', P.glass, 'Büyüteç: bir fareyi göster', play);
@@ -2083,7 +2063,7 @@ $('settings').addEventListener('click', showSettings);
   /* arayüz resimleri + rakamlar */
   list.push('ui-pause.webp', 'ui-fullscreen.webp', 'ui-baslik.webp',
             'ui-yildiz-dolu.webp', 'ui-yildiz-yarim.webp', 'ui-yildiz-bos.webp',
-            'ui-para.webp', 'ui-saat.webp', 'ui-pati.webp', 'ui-sayac.webp',
+            'ui-para.webp', 'ui-sayac.webp',
             'ui-rozet.webp', 'ui-arti.webp', 'ui-kart.webp', 'ui-btn-altin.webp',
             'ui-btn-mor.webp', 'ui-parilti.webp', 'rakam-bolu.webp', 'rakam-iki-nokta.webp',
             'ui-ayar.webp', 'ik-ampul.webp', 'ik-buyutec.webp', 'ik-reklam.webp', 'ik-kupa.webp',
@@ -2095,7 +2075,6 @@ $('settings').addEventListener('click', showSettings);
   preload(list, function () {
     if (!P.tutorialDone) startTutorial();
     else startGameLevel(P.level);
-    setInterval(function () { if (S) renderTime(); }, 500);
   });
 })();
 
