@@ -16,5 +16,6 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 - Kayıt: localStorage `fareBulmaca.v1`.
 
 ## Dosyalar
-- `kare-N` / `pati-N`: bölge kareleri (8 kullanılmaz). `fare-cikis` / `fare-idle`: fare sprite şeritleri (12 kare, 170 ms).
+- `kare-N` / `pati-N`: pastel bölge kareleri, 9 renk (0 kırmızı, 1 sarı, 2 mavi, 3 mor, 4 pembe, 5 turkuaz, 6 turuncu, 7 yeşil, 8 kahve). `fare-cikis` / `fare-idle`: fare sprite şeritleri (12 kare, 170 ms).
 - `ui-*`, `rakam-*`, `kalp-*`, `btn-*`: arayüz görselleri. `pop-1..8.mp3`: pati sesleri (sırayla döner), `ses-fare.mp3`: fare açılma sesi.
+- Tema: pastel (2026-11-18). Çerçeve lila kenar + krem iç zemin.
