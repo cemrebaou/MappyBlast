@@ -215,7 +215,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 /* ---------- Alt tuşlar: ampul (ipucu) + büyüteç ---------- */
 .tools{display:flex;justify-content:center;align-items:flex-end;gap:calc(144*var(--u));
   /* ~2 tuş genişliği; dar çerçevede sağ alttaki tam ekran tuşuna yer bırakır */
-  gap:max(calc(20*var(--u)),min(calc(144*var(--u)),var(--bw,100vw) - calc(248*var(--u))));margin-top:calc(14*var(--u));flex:none}
+  gap:max(calc(16*var(--u)),min(calc(72*var(--u)),(var(--bw,100vw) - calc(320*var(--u))) / 2));margin-top:calc(14*var(--u));flex:none}
 .img-btn{
   position:relative;border:0;padding:0;margin:0;background:none;line-height:0;border-radius:50%;
   transition:transform .1s,opacity .2s,filter .2s;
@@ -461,6 +461,9 @@ html.native .sim-banner{display:none!important}
       <img src="ik-buyutec.webp" width="161" height="160" alt="">
       <span class="badge" id="badgeGlass" aria-hidden="true"></span>
     </button>
+    <button class="img-btn" type="button" id="btnSkip" aria-label="Bölümü geç">
+      <img src="ik-oynat.webp" width="129" height="128" alt="">
+    </button>
   </div>
   </section>
 
@@ -545,6 +548,9 @@ var I18N = {
   adLife: ["Reklam izle, canlar dolsun", "Watch an ad, refill lives", "看广告补满生命", "विज्ञापन देखें, जानें भरें", "Mira un anuncio y recupera vidas", "Regarde une pub, récupère tes vies", "شاهد إعلانًا لتملأ الأرواح", "বিজ্ঞাপন দেখো, জীবন ভরো", "Veja um anúncio e recupere vidas", "Реклама — и жизни снова полны", "اشتہار دیکھیں، جانیں بھریں"],
   hintsOut: ["İpucu hakkın bitti", "Out of hints", "提示用完了", "संकेत खत्म", "Sin pistas", "Plus d'indices", "نفدت التلميحات", "ইঙ্গিত শেষ", "Sem dicas", "Подсказки кончились", "اشارے ختم"],
   glassOut: ["Büyüteç hakkın bitti", "Out of magnifiers", "放大镜用完了", "आवर्धक खत्म", "Sin lupas", "Plus de loupes", "نفدت العدسات", "আতশ কাচ শেষ", "Sem lupas", "Лупы кончились", "عدسے ختم"],
+  skipTitle: ["Bölümü geç", "Skip level", "跳过关卡", "लेवल छोड़ें", "Saltar nivel", "Passer le niveau", "تخطي المرحلة", "লেভেল বাদ দাও", "Pular fase", "Пропустить уровень", "لیول چھوڑیں"],
+  skipText: ["Reklam izle, bu bölümü geç. Sonraki bölüm biraz daha kolay gelir.", "Watch an ad to skip this level. The next one will be a bit easier.", "看广告跳过本关，下一关会简单一些。", "विज्ञापन देखकर यह लेवल छोड़ें। अगला लेवल थोड़ा आसान होगा।", "Mira un anuncio y salta este nivel. El siguiente será un poco más fácil.", "Regarde une pub pour passer ce niveau. Le suivant sera un peu plus facile.", "شاهد إعلانًا لتخطي هذه المرحلة. ستكون المرحلة التالية أسهل قليلًا.", "বিজ্ঞাপন দেখে এই লেভেল বাদ দাও। পরের লেভেল একটু সহজ হবে।", "Veja um anúncio para pular esta fase. A próxima será um pouco mais fácil.", "Посмотри рекламу, чтобы пропустить уровень. Следующий будет чуть легче.", "اشتہار دیکھ کر یہ لیول چھوڑیں۔ اگلا لیول تھوڑا آسان ہوگا۔"],
+  adSkip: ["Reklam izle, geç", "Watch an ad, skip", "看广告跳过", "विज्ञापन देखें, छोड़ें", "Mira un anuncio, salta", "Regarde une pub, passe", "شاهد إعلانًا وتخطَّ", "বিজ্ঞাপন দেখো, বাদ দাও", "Veja um anúncio, pule", "Реклама и пропуск", "اشتہار دیکھیں، چھوڑیں"],
   adPlus: ["Reklam izle, +{0} hak", "Watch an ad, +{0} uses", "看广告，+{0} 次", "विज्ञापन देखें, +{0}", "Mira un anuncio, +{0}", "Regarde une pub, +{0}", "شاهد إعلانًا، +{0}", "বিজ্ঞাপন দেখো, +{0}", "Veja um anúncio, +{0}", "Реклама: +{0}", "اشتہار دیکھیں، +{0}"],
   cancel: ["Vazgeç", "No thanks", "不用了", "रहने दें", "No, gracias", "Non merci", "لا، شكرًا", "থাক", "Agora não", "Нет, спасибо", "رہنے دیں"],
   preparing: ["Hazırlanıyor…", "Getting ready…", "准备中…", "तैयार हो रहा है…", "Preparando…", "Préparation…", "جارٍ التحضير…", "প্রস্তুত হচ্ছে…", "Preparando…", "Готовим…", "تیاری ہو رہی ہے…"]
@@ -1441,6 +1447,8 @@ function updateHud() {
 
   setHelpButton('btnHint', 'badgeHint', P.bulb, t('hintBtn'), play);
   setHelpButton('btnGlass', 'badgeGlass', P.glass, t('glassBtn'), play);
+  $('btnSkip').disabled = !play;
+  $('btnSkip').setAttribute('aria-label', t('skipTitle'));
   $('pause').disabled = !(S.status === 'play' && !overlayOpen);
   $('settings').disabled = overlayOpen;
   $('back').disabled = !S || overlayOpen;
@@ -1841,6 +1849,26 @@ function hintTargets(max) {
     take(best[0], best[1]);
   }
   return picks;
+}
+
+/* Bölümü geç: reklam izleyince bölüm geçilir (yıldız/para yok), oyuncu puanı düşer → sonraki bölüm daha kolay */
+var SKIP_ZP_DROP = 8;
+function showSkipOffer() {
+  if (MODE === 'tut' || S.status !== 'play' || overlayOpen) return;
+  openOverlay(
+    '<h2 id="ovTitle">' + t('skipTitle') + '</h2><p>' + t('skipText') + '</p>' +
+    '<div class="acts">' + adButton('adSkip', t('adSkip'), 'gec') +
+    '<button class="txt-btn" type="button" data-act="close">' + t('cancel') + '</button></div>', true);
+}
+function skipLevel() {
+  var next = MODE === 'play' ? LEVEL.L + 1 : P.level;
+  P.zp = clamp(P.zp - SKIP_ZP_DROP, 0, 100);
+  P.level = Math.max(P.level, next);
+  P.cur = null;
+  P.counters.levelsSkipped = (P.counters.levelsSkipped || 0) + 1;
+  save();
+  closeOverlay();
+  startGameLevel(P.level);
 }
 
 function useGlass() {
@@ -2461,6 +2489,7 @@ var ACTIONS = {
     });
   },
   replay: function () { begin(PUZ, 'replay'); },
+  adSkip: function () { Ads.rewarded('gec', skipLevel); },
   tutDone: function () { closeOverlay(); finishTutorial(false); },
   backToOver: function () { showGameOver(true); },
   adLife: function () {
@@ -2538,6 +2567,7 @@ $('grid').addEventListener('click', onCellClick);
 $('grid').addEventListener('dblclick', function (e) { e.preventDefault(); });   /* çift dokunuş yakınlaştırmasın */
 $('btnHint').addEventListener('click', useHint);
 $('btnGlass').addEventListener('click', useGlass);
+$('btnSkip').addEventListener('click', showSkipOffer);
 $('pause').addEventListener('click', showPause);
 $('back').addEventListener('click', function () { if (S && !overlayOpen) ACTIONS.restart(); });
 $('settings').addEventListener('click', showSettings);
