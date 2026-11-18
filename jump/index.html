@@ -32,14 +32,20 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 #game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 
 /* ---------- Üst gösterge ---------- */
-.hud{position:fixed;inset:0;pointer-events:none;z-index:2}
+.hud{position:fixed;inset:0;pointer-events:none;z-index:2;--band:calc(56*var(--u) + env(safe-area-inset-top,0px))}
+/* en üstte banner reklam alanı (her zaman ayrılmış) */
+.ad-top{position:fixed;left:0;right:0;top:0;height:calc(56*var(--u) + env(safe-area-inset-top,0px));z-index:3;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.25));display:flex;align-items:flex-end;justify-content:center;padding-bottom:calc(3*var(--u))}
+.ad-top .sim{display:none;width:min(100%,calc(380*var(--u)));height:calc(50*var(--u));border-radius:calc(8*var(--u));background:#e4e1ea;color:#7a7488;
+  font-weight:700;font-size:calc(14*var(--u));align-items:center;justify-content:center}
+.ad-top.on .sim{display:flex}
 .hud button{pointer-events:auto}
-.top-left{position:absolute;left:calc(10*var(--u) + env(safe-area-inset-left,0px));top:calc(10*var(--u) + env(safe-area-inset-top,0px));display:flex;gap:calc(4*var(--u))}
+.top-left{position:absolute;left:calc(10*var(--u) + env(safe-area-inset-left,0px));top:calc(10*var(--u) + var(--band));display:flex;gap:calc(4*var(--u))}
 .ui-btn{border:0;padding:0;margin:0;background:none;border-radius:50%;line-height:0;transition:transform .1s}
 .ui-btn img{display:block;height:calc(46*var(--u));width:auto;filter:drop-shadow(0 calc(2*var(--u)) calc(3*var(--u)) rgba(30,20,60,.25))}
 .ui-btn:active{transform:scale(.92)}
-.fs-btn{position:absolute;right:calc(10*var(--u) + env(safe-area-inset-right,0px));top:calc(10*var(--u) + env(safe-area-inset-top,0px))}
-.score{position:absolute;left:50%;top:calc(10*var(--u) + env(safe-area-inset-top,0px));transform:translateX(-50%);
+.fs-btn{position:absolute;right:calc(10*var(--u) + env(safe-area-inset-right,0px));top:calc(10*var(--u) + var(--band))}
+.score{position:absolute;left:50%;top:calc(10*var(--u) + var(--band));transform:translateX(-50%);
   display:flex;flex-direction:column;align-items:center;gap:calc(4*var(--u))}
 .score-main{display:flex;align-items:flex-end;gap:calc(3*var(--u));filter:drop-shadow(0 calc(2*var(--u)) calc(3*var(--u)) rgba(30,20,60,.3))}
 .score-main .dg img{height:calc(46*var(--u))}
@@ -147,6 +153,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 
 <canvas id="game" aria-label="Mappy Jump oyun alanı. Sol ya da sağ yarıya basılı tut: yön ver."></canvas>
 
+<div class="ad-top" id="adTop" aria-hidden="true"><div class="sim">Reklam</div></div>
 <div class="hud" id="hud">
   <div class="top-left">
     <button class="ui-btn" type="button" id="settings" aria-label="Ayarlar"><img src="../ui-ayar.webp" width="129" height="128" alt=""></button>
@@ -302,7 +309,7 @@ var MOUSE_H = 1.3, MOUSE_W = MOUSE_H * 202 / 256, FOOT_HW = 0.2;
    (2.0 × 0.72 → 1.8 × 0.648). Tırmandıkça her 19 m'de %1 küçülür; %50'ye (0.9 × 0.324) ancak 950 m'de iner.
    Kalınlık en az 0.38 birim (görünür ve basılabilir kalsın). Çarpışma genişliği çizilen genişliği izler. */
 var ROPE_BASE_W = 1.8, ROPE_BASE_H = 0.648, ROPE_MIN_H = 0.38;
-var SIZE_STEP_M = 19, SIZE_STEP = 0.01, SIZE_MIN = 0.5;
+var SIZE_STEP_M = 9.5, SIZE_STEP = 0.01, SIZE_MIN = 0.5;
 function sizeAt(y) { return Math.max(SIZE_MIN, 1 - SIZE_STEP * Math.floor(Math.max(0, y) / SIZE_STEP_M)); }
 function ropeWAt(y) { return ROPE_BASE_W * sizeAt(y); }
 function ropeHAt(y) { return Math.max(ROPE_MIN_H, ROPE_BASE_H * sizeAt(y)); }
@@ -328,14 +335,14 @@ var ROPE_TINT = [null,
    hak sayısı (budget) bölge sınırında basamakla düşer. Gökyüzü bölgeleri aynı sınırlarda değişir. */
 var ZONES = [
   { h: 0,   budget: 5, gap: 2.20, offMin: 0.6, offMax: 1.4, moveP: 0,    moveV: 0,   fragileP: 0 },
-  { h: 60,  budget: 4, gap: 2.35, offMin: 0.9, offMax: 1.8, moveP: 0.15, moveV: 0.5, fragileP: 0 },
-  { h: 150, budget: 3, gap: 2.50, offMin: 1.2, offMax: 2.2, moveP: 0.30, moveV: 0.7, fragileP: 0 },
-  { h: 270, budget: 2, gap: 2.60, offMin: 1.4, offMax: 2.4, moveP: 0.45, moveV: 0.9, fragileP: 0 },
-  { h: 420, budget: 2, gap: 2.70, offMin: 1.7, offMax: 2.8, moveP: 0.60, moveV: 1.1, fragileP: 0 },
-  { h: 600, budget: 2, gap: 2.75, offMin: 1.9, offMax: 3.1, moveP: 0.70, moveV: 1.3, fragileP: 0.5 }
+  { h: 30,  budget: 4, gap: 2.35, offMin: 0.9, offMax: 1.8, moveP: 0.15, moveV: 0.5, fragileP: 0 },
+  { h: 75,  budget: 3, gap: 2.50, offMin: 1.2, offMax: 2.2, moveP: 0.30, moveV: 0.7, fragileP: 0 },
+  { h: 135, budget: 2, gap: 2.60, offMin: 1.4, offMax: 2.4, moveP: 0.45, moveV: 0.9, fragileP: 0 },
+  { h: 210, budget: 2, gap: 2.70, offMin: 1.7, offMax: 2.8, moveP: 0.60, moveV: 1.1, fragileP: 0 },
+  { h: 300, budget: 2, gap: 2.75, offMin: 1.9, offMax: 3.1, moveP: 0.70, moveV: 1.3, fragileP: 0.5 }
 ];
-/* son bölgede yan kayma 950 m'ye kadar artmaya devam eder (sonra sabit) */
-var TOP_H = 950, TOP_OFF_MIN = 2.2, TOP_OFF_MAX = 3.5;
+/* zorlaşma 2 kat hızlı (2026-11-18): son bölgede yan kayma 475 m'ye kadar artmaya devam eder (sonra sabit) */
+var TOP_H = 475, TOP_OFF_MIN = 2.2, TOP_OFF_MAX = 3.5;
 /* Ulaşılabilirlik: fırlayıştan bir sonraki ipin yüksekliğine düşene kadar geçen süre × en yüksek yan hız × %85.
    En kötü durum: önceki ipin uzak ucundan (+ iki ipin kayma genlikleri) yeni ipin ortasına kadar olan yol bunu aşamaz. */
 var REACH_SAFETY = 0.85;
@@ -775,7 +782,7 @@ var SKY_RGB = SKY.map(function (p) { return [hexRgb(p[0]), hexRgb(p[1])]; });
 function smooth(t) { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }
 function zoneFloat(h) {
   var z = 0;
-  for (var i = 1; i < ZONES.length; i++) z += smooth((h - (ZONES[i].h - 15)) / 30);
+  for (var i = 1; i < ZONES.length; i++) z += smooth((h - (ZONES[i].h - 8)) / 16);
   return z;
 }
 function mixRgb(a, b, t) { return 'rgb(' + Math.round(lerp(a[0], b[0], t)) + ',' + Math.round(lerp(a[1], b[1], t)) + ',' + Math.round(lerp(a[2], b[2], t)) + ')'; }
@@ -957,8 +964,8 @@ var SimAdProvider = {
   },
   showRewarded: function (cb, failCb) { SimAdProvider.show(t('adReward'), cb); },
   showInterstitial: function (cb) { SimAdProvider.show(t('adSoon'), cb); },
-  showBanner: function () {},
-  hideBanner: function () {}
+  showBanner: function () { var b = document.getElementById('adTop'); if (b) b.classList.add('on'); },
+  hideBanner: function () { var b = document.getElementById('adTop'); if (b) b.classList.remove('on'); }
 };
 var Ads = {
   // TODO: AdMob (Android) / AdSense H5 (web) sağlayıcısı buraya
@@ -974,7 +981,9 @@ var Ads = {
     }, function () { end(); if (onFail) onFail(); else showAdFail(); });
   },
   /* oyun bitti sayacı */
-  noteGameOver: function () { P.runs++; P.goSince++; save(); },
+  noteGameOver: function () { P.runs++; P.goSince++; save(); Ads.banner(); },
+  /* üst banner: ilk oyunda yok, 2. oyundan itibaren (reklamsız oyuncuya hiç) */
+  banner: function () { if (P.runs >= 1 && !P.noAds) Ads.provider.showBanner(); else Ads.provider.hideBanner(); },
   /* "Tekrar oyna"ya basınca: en az 3 oyun bitişi ve 3 dk arayla, ilk 2 oyunda hiç */
   interstitialAfterGameOver: function (then) {
     var show = !Ads.busy && P.runs > AD_FIRST_RUNS && P.goSince >= AD_EVERY && (!P.adLastAt || Date.now() - P.adLastAt >= AD_MIN_MS);
@@ -1191,6 +1200,8 @@ document.addEventListener('fullscreenchange', function () { setTimeout(resize, 6
 (function boot() {
   resize();
   resetWorld();
+  try { document.querySelector('#adTop .sim').textContent = t('ad'); } catch (e) {}
+  Ads.banner();
   var left = 2;
   function one() {
     if (--left > 0) return;

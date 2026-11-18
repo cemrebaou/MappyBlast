@@ -161,3 +161,8 @@ Fare kendi kendine sonsuza dek zıplar; oyuncu yalnızca sola / sağa yön verir
 ### Jump dosyaları
 - `jump/fare.webp`, `jump/ip.webp`, `jump/baslangic.mp3`, `jump/ziplama-1..3.mp3`, `jump/muzik-jump.mp3`. Kökten: `ui-pause`, `ui-ayar`, `ui-fullscreen`, `ui-kart`, `ui-btn-altin`, `ui-btn-mor`, `ui-parilti`, `ik-*`, `rakam-*`, `pop-1.mp3`.
 - Tuvale yazı çizilmiyor; tüm jump yazıları HTML'de ve `t()` ile çevriliyor.
+
+### Mappy Jump — 2026-11-18 güncellemesi
+- Zorlaşma 2 kat hızlı: zorluk bölgeleri 0 / 30 / 75 / 135 / 210 / 300 m (eskisi 0/60/150/270/420/600). Son bölgede yan mesafe 475 m'ye kadar artar.
+- İp boyu her 9,5 m'de %1 küçülür, %50'ye ~475 m'de iner. Gökyüzü geçişleri aynı sınırlarda (±8 m).
+- En üstte banner reklam alanı (56u + çentik) her zaman ayrılı; HUD onun altında. Simülatör banner'ı 2. oyundan itibaren gösterir (`Ads.banner()`), reklamsız oyuncuya hiç.
