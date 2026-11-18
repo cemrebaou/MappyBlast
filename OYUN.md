@@ -17,4 +17,4 @@ Queens tarzı mantık bulmacası: her satır, sütun ve renkli bölgede 1 polis 
 
 ## Dosyalar
 - `kare-N` / `pati-N`: bölge kareleri (8 kullanılmaz). `fare-cikis` / `fare-idle`: fare sprite şeritleri (12 kare, 170 ms).
-- `ui-*`, `rakam-*`, `kalp-*`, `btn-*`: arayüz görselleri. `ses-pati.mp3`, `ses-fare.mp3`: sesler.
+- `ui-*`, `rakam-*`, `kalp-*`, `btn-*`: arayüz görselleri. `pop-1..8.mp3`: pati sesleri (sırayla döner), `ses-fare.mp3`: fare açılma sesi.

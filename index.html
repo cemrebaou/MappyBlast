@@ -1218,7 +1218,7 @@ function onCellClick(e) {
     /* 1. dokunuş: pati işareti, doğrulanmaz, bedava */
     S.cells[r][c] = 'paw';
     paintCell(r, c);
-    playSound('pati');
+    playPop();
     if (!REDUCED) restartClass(v.img, 'pop');
     if (MODE === 'tut') tutOnPaw(r, c);
   } else if (st === 'paw') {
@@ -1230,7 +1230,10 @@ function onCellClick(e) {
 }
 
 /* ---------- Sesler ---------- */
-var SOUNDS = { pati: 'ses-pati.mp3', fare: 'ses-fare.mp3' }, SOUND_CACHE = {};
+var SOUNDS = { fare: 'ses-fare.mp3', pop1: 'pop-1.mp3', pop2: 'pop-2.mp3', pop3: 'pop-3.mp3', pop4: 'pop-4.mp3', pop5: 'pop-5.mp3', pop6: 'pop-6.mp3', pop7: 'pop-7.mp3', pop8: 'pop-8.mp3' }, SOUND_CACHE = {};
+/* pati sesi: 8 pop sırayla, sonra başa */
+var POP_I = 0;
+function playPop() { POP_I = POP_I % 8 + 1; playSound('pop' + POP_I); }
 function playSound(name) {
   try {
     var base = SOUND_CACHE[name];
